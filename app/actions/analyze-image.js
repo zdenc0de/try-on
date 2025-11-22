@@ -1,6 +1,6 @@
 'use server'
 
-import { GoogleGenerativeAI } from "@google/genereative-ai"; // Ojo: asegúrate de importar la librería correcta instalada
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Ojo: asegúrate de importar la librería correcta instalada
 // Si instalaste la estándar: import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Inicializamos Gemini
@@ -11,7 +11,7 @@ export async function analyzeClothingImage(imageBase64) {
 
   try {
     // 1. Configuramos el modelo (Flash es rápido y barato para esto)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     // 2. El Prompt de Sistema (La parte más importante)
     // Le decimos explícitamente que actúe como API y devuelva JSON.
