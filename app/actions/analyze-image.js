@@ -11,7 +11,7 @@ export async function analyzeClothingImage(imageBase64) {
 
   try {
     // 1. Configuramos el modelo (Flash es rápido y barato para esto)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // 2. El Prompt de Sistema (La parte más importante)
     // Le decimos explícitamente que actúe como API y devuelva JSON.
