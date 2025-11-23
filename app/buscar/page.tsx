@@ -1,195 +1,114 @@
-// app/buscar/page.tsx
 import Link from 'next/link';
-import { ArrowLeft, Search, Tag, Sparkles } from 'lucide-react';
-import { searchProductsWithGemini } from '@/app/actions/search-for-prodcut'; // Ajusta la ruta según tu proyecto
-
-// Tipo para los productos (ajústalo según tu esquema real)
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  category: string;
-  color: string;
-  image_url?: string;
-  tags?: string[];
-}
-
-interface SearchResult {
-  success: boolean;
-  data?: Product[];
-  aiFilters?: {
-    category?: string;
-    color?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    searchTerms?: string;
-  };
-  isFallback?: boolean;
-  error?: string;
-}
+import { searchProducts } from '@/app/actions/smart-search';
+import ProductGrid from '@/app/components/ProductGrid'; 
+import { Sparkles, Frown, ArrowLeft, Target, Link2 } from 'lucide-react';
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string }>; // ✅ FIX: Ahora es Promise
 }) {
-  const resolvedParams = await searchParams;
-  const query = resolvedParams.q || '';
-
-  // Llamar a la búsqueda inteligente si hay query
-  let searchResult: SearchResult | null = null;
+  // ✅ FIX: Desempaquetar la Promise
+  const params = await searchParams;
+  const query = params.q || '';
   
+  let products = [];
+  let aiTags: { direct: string[], related: string[] } = { direct: [], related: [] };
+  let success = false;
+
   if (query) {
-    searchResult = await searchProductsWithGemini(query);
+    const result = await searchProducts(query);
+    products = result.products || [];
+    aiTags = result.aiTags || { direct: [], related: [] };
+    success = result.success || false;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <Link href="/" className="flex items-center text-gray-500 hover:text-gray-900 mb-6">
-          <ArrowLeft className="mr-2" size={20} /> Volver al inicio
-        </Link>
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
+      
+      <main className="max-w-[1400px] mx-auto px-4 py-12">
+        
+        {/* Header de Búsqueda */}
+        <div className="mb-12">
+          <Link 
+            href="/" 
+            className="text-neutral-500 hover:text-white flex items-center gap-2 mb-6 transition-colors text-sm group"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            Volver al inicio
+          </Link>
 
-        <h1 className="text-3xl font-bold mb-4">Resultados de búsqueda</h1>
+          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
+            Resultados para <span className="text-orange-600">"{query}"</span>
+          </h1>
 
-        {query ? (
-          <div className="space-y-4">
-            <p className="text-lg text-gray-700">
-              Buscando outfits para: <span className="font-bold text-purple-600">"{query}"</span>
+          {/* Mostramos el razonamiento de la IA (Factor WOW) */}
+          {success && (aiTags.direct.length > 0 || aiTags.related.length > 0) && (
+            <div className="space-y-3">
+              
+              {/* Tags directos */}
+              {aiTags.direct.length > 0 && (
+                <div className="flex flex-wrap gap-2 items-center text-sm bg-neutral-900/50 p-4 rounded-xl border border-neutral-800">
+                  <Target className="text-orange-500 mr-2" size={18} />
+                  <span className="text-neutral-400 font-medium">Buscando directamente:</span>
+                  {aiTags.direct.map((tag: string, i: number) => (
+                    <span 
+                      key={i} 
+                      className="bg-orange-600/20 text-orange-400 border border-orange-600/30 px-2 py-1 rounded text-xs uppercase font-mono"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Tags relacionados */}
+              {aiTags.related.length > 0 && (
+                <div className="flex flex-wrap gap-2 items-center text-sm bg-neutral-900/30 p-4 rounded-xl border border-neutral-800">
+                  <Link2 className="text-purple-500 mr-2" size={18} />
+                  <span className="text-neutral-400 font-medium">También considerando:</span>
+                  {aiTags.related.map((tag: string, i: number) => (
+                    <span 
+                      key={i} 
+                      className="bg-purple-600/20 text-purple-400 border border-purple-600/30 px-2 py-1 rounded text-xs uppercase font-mono"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+            </div>
+          )}
+        </div>
+
+        {/* Resultados */}
+        {products && products.length > 0 ? (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <p className="text-neutral-500 text-sm mb-6">
+              {products.length} {products.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
             </p>
-
-            {/* Mostrar filtros interpretados por la IA */}
-            {searchResult?.aiFilters && !searchResult.isFallback && (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-purple-700 font-medium mb-2">
-                  <Sparkles size={18} />
-                  <span>La IA interpretó tu búsqueda como:</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {searchResult.aiFilters.category && (
-                    <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                      Categoría: {searchResult.aiFilters.category}
-                    </span>
-                  )}
-                  {searchResult.aiFilters.color && (
-                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      Color: {searchResult.aiFilters.color}
-                    </span>
-                  )}
-                  {searchResult.aiFilters.maxPrice && (
-                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                      Precio máx: ${searchResult.aiFilters.maxPrice}
-                    </span>
-                  )}
-                  {searchResult.aiFilters.searchTerms && (
-                    <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                      Keywords: {searchResult.aiFilters.searchTerms}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Indicador de fallback */}
-            {searchResult?.isFallback && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-yellow-700 text-sm">
-                ⚠️ Usando búsqueda tradicional (la IA no está disponible temporalmente)
-              </div>
-            )}
+            <ProductGrid products={products} />
           </div>
         ) : (
-          <p className="text-gray-500">No se especificó ninguna búsqueda.</p>
+          <div className="py-20 text-center border border-dashed border-neutral-800 rounded-2xl bg-neutral-900/20">
+            <div className="flex justify-center mb-4">
+              <div className="bg-neutral-800 p-4 rounded-full">
+                <Frown size={40} className="text-neutral-500" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">
+              {query ? "No encontramos nada con esa vibra" : "Escribe algo para buscar"}
+            </h2>
+            <p className="text-neutral-500 max-w-md mx-auto">
+              {query 
+                ? "Intenta describir tu estilo de otra forma o usa palabras más generales."
+                : "Usa la barra de búsqueda para encontrar tu próximo outfit con IA."}
+            </p>
+          </div>
         )}
 
-        {/* Grid de resultados */}
-        <div className="mt-8">
-          {searchResult?.success && searchResult.data && searchResult.data.length > 0 ? (
-            <>
-              <p className="text-gray-600 mb-4">
-                {searchResult.data.length} producto{searchResult.data.length !== 1 ? 's' : ''} encontrado{searchResult.data.length !== 1 ? 's' : ''}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {searchResult.data.map((product) => (
-                  <Link 
-                    key={product.id} 
-                    href={`/producto/${product.id}`}
-                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group"
-                  >
-                    {/* Imagen del producto */}
-                    <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                      {product.image_url ? (
-                        <img
-                          src={product.image_url}
-                          alt={product.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <Search size={40} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info del producto */}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {product.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                        {product.description}
-                      </p>
-                      
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-lg font-bold text-purple-600">
-                          ${product.price}
-                        </span>
-                        {product.category && (
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                            {product.category}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {product.tags.slice(0, 3).map((tag, idx) => (
-                            <span 
-                              key={idx}
-                              className="text-xs text-gray-500 flex items-center gap-1"
-                            >
-                              <Tag size={10} />
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </>
-          ) : searchResult?.success && searchResult.data?.length === 0 ? (
-            <div className="p-10 border border-dashed border-gray-300 rounded-xl text-center">
-              <Search size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 text-lg">No encontramos productos para "{query}"</p>
-              <p className="text-gray-400 text-sm mt-2">
-                Intenta con otros términos o categorías
-              </p>
-            </div>
-          ) : searchResult?.error ? (
-            <div className="p-10 border border-red-200 bg-red-50 rounded-xl text-center">
-              <p className="text-red-600">Error en la búsqueda: {searchResult.error}</p>
-            </div>
-          ) : !query ? (
-            <div className="p-10 border border-dashed border-gray-300 rounded-xl text-center text-gray-400">
-              <Search size={48} className="mx-auto mb-4" />
-              <p>Escribe algo en el buscador para encontrar productos</p>
-            </div>
-          ) : null}
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
