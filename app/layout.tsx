@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReVibe AI",
+  title: "TRY-ON",
   description: "Marketplace de moda de segunda mano con IA",
 };
 
