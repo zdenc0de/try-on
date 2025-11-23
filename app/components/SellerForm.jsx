@@ -3,9 +3,65 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { analyzeClothingImage } from '@/app/actions/analyze-image';
 import { saveProduct } from '@/app/actions/save-product';
-import { Camera, Loader2, CheckCircle, UploadCloud, Info } from 'lucide-react'; // Importamos Info
+import { Camera, Loader2, CheckCircle, UploadCloud, Info } from 'lucide-react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation'; // Para navegación fluida
+import { useRouter } from 'next/navigation';
+
+// Función para comprimir imagen si es mayor a 1MB
+const compressImage = (file, maxSizeMB = 1) => {
+  return new Promise((resolve) => {
+    const maxSize = maxSizeMB * 1024 * 1024; // 1MB en bytes
+
+    // Si es menor a 1MB, retornar sin comprimir
+    if (file.size <= maxSize) {
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Reducir dimensiones si es muy grande
+        const maxDimension = 1920;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = (height / width) * maxDimension;
+            width = maxDimension;
+          } else {
+            width = (width / height) * maxDimension;
+            height = maxDimension;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Comprimir con calidad reducida
+        canvas.toBlob(
+          (blob) => {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          0.7 // Calidad 70%
+        );
+      };
+    };
+  });
+};
 
 export default function SellerForm() {
   const { register, handleSubmit, setValue } = useForm();
@@ -21,14 +77,18 @@ export default function SellerForm() {
     const file = e.target.files[0];
     if (!file) return;
 
-    setFileObj(file);
-    setPreview(URL.createObjectURL(file));
     setLoadingAnalysis(true);
     setAnalyzed(false);
 
+    // Comprimir imagen si es mayor a 1MB
+    const compressedFile = await compressImage(file);
+
+    setFileObj(compressedFile);
+    setPreview(URL.createObjectURL(compressedFile));
+
     try {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(compressedFile);
       reader.onloadend = async () => {
         const base64data = reader.result.split(',')[1];
 
@@ -90,7 +150,6 @@ export default function SellerForm() {
         <input
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={handleImageChange}
           disabled={isSaving}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
