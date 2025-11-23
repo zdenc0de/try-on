@@ -179,7 +179,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="border-t border-neutral-800 mt-20">
         <div className="max-w-[1400px] mx-auto px-4 py-6">
           <p className="font-mono text-xs text-neutral-600 uppercase tracking-wider text-center">
-            Sistema de Inventario v1.0 — Powered by IA
+            By Codex
           </p>
         </div>
       </div>
