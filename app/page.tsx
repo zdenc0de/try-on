@@ -86,7 +86,7 @@ export default async function Home() {
 
           {/* GRID DE PRODUCTOS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products?.map((product) => (
+            {products?.map((product:any) => (
               <div key={product.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
                 
                 {/* Imagen */}
