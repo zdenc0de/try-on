@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 
 // Placeholders - Reemplazar con tus imágenes en /public/carousel/
 const images = [
-  '/carousel/1.jpg',
-  '/carousel/2.jpg',
-  '/carousel/3.jpg',
-  '/carousel/4.jpg',
-  '/carousel/5.jpg',
+  
+  '/carousel/c1.jpg',
+  '/carousel/c2.jpg',
+  '/carousel/c3.jpg',
+  '/carousel/c4.jpg',
+  '/carousel/c5.jpg',
 ];
 
 export default function ImageCarousel() {
