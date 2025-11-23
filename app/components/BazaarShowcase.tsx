@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Instagram, Shirt } from 'lucide-react';
+import { Instagram, Shirt } from 'lucide-react';
 
 interface BazaarShowcaseProps {
   sellers: any[]; // Recibimos la lista de vendedores procesada
@@ -18,9 +18,7 @@ export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
             Curaduría local & moda circular
           </p>
         </div>
-        <Link href="/bazaars" className="hidden md:flex items-center gap-2 text-xs font-mono uppercase hover:text-orange-600 transition-colors">
-            Ver directorio completo <ArrowRight size={14} />
-        </Link>
+        {/* Link a directorio (próximamente) */}
       </div>
 
       {/* Grid de Bazares */}
@@ -84,9 +82,12 @@ export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
 
             {/* Footer Card */}
             <div className="border-t border-neutral-800 p-3 bg-black">
-                <button className="w-full py-2 text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all">
+                <Link
+                  href={`/vendedor/${seller.id}`}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-neutral-900 text-white border border-neutral-700 hover:border-orange-600 hover:text-orange-500"
+                >
                     Ver Perfil
-                </button>
+                </Link>
             </div>
           </div>
         ))}

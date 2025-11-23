@@ -1,24 +1,29 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Instagram, Save, LogOut, User, Sparkles, ArrowLeft, Loader2, Shirt } from 'lucide-react'
+import { Instagram, Save, LogOut, User, Sparkles, ArrowLeft, Loader2, Shirt, Camera } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
+import { updateAvatar } from '@/app/actions/update-avatar'
 // IMPORTAMOS TU GRID DE PRODUCTOS
 import ProductGrid from '@/app/components/ProductGrid'
 
 export default function ProfilePage() {
   const router = useRouter()
   const supabase = createClient()
-  
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState<any>(null)
   // Estado para el catálogo
-  const [userProducts, setUserProducts] = useState<any[]>([]) 
-  
+  const [userProducts, setUserProducts] = useState<any[]>([])
+
   const [instagram, setInstagram] = useState('')
   const [fullName, setFullName] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   useEffect(() => {
     const getData = async () => {
@@ -34,13 +39,14 @@ export default function ProfilePage() {
       // 2. Perfil
       const { data: profile } = await supabase
         .from('profiles')
-        .select('instagram_handle, full_name')
+        .select('instagram_handle, full_name, avatar_url')
         .eq('id', session.user.id)
         .single()
-      
+
       if (profile) {
         setInstagram(profile.instagram_handle || '')
         setFullName(profile.full_name || session.user.user_metadata.full_name || '')
+        setAvatarUrl(profile.avatar_url || null)
       }
 
       // 3. Catálogo (Tus productos)
@@ -98,6 +104,27 @@ export default function ProfilePage() {
     router.push('/login')
   }
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingAvatar(true)
+
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    const result = await updateAvatar(formData)
+
+    if (result.success) {
+      setAvatarUrl(result.url)
+      toast.success('Foto actualizada')
+    } else {
+      toast.error(result.error)
+    }
+
+    setUploadingAvatar(false)
+  }
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white font-sans">
       <Loader2 className="animate-spin mr-2 text-orange-600" /> Cargando perfil...
@@ -121,11 +148,36 @@ export default function ProfilePage() {
             <div className="bg-neutral-950 border border-neutral-800 rounded-none overflow-hidden">
                 
                 {/* Banner Decorativo */}
-                <div className="h-32 bg-linear-to-r from-orange-600 via-orange-500 to-orange-700 relative">
+                <div className="h-32 bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 relative">
                     <div className="absolute -bottom-10 left-8">
-                        <div className="w-24 h-24 bg-black rounded-none border-2 border-orange-600 flex items-center justify-center text-3xl font-black text-white shadow-lg overflow-hidden uppercase">
-                            {fullName ? fullName[0].toUpperCase() : session?.user?.email[0].toUpperCase()}
-                        </div>
+                        {/* Input oculto para seleccionar archivo */}
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleAvatarChange}
+                          accept="image/*"
+                          className="hidden"
+                        />
+
+                        {/* Avatar clickeable */}
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingAvatar}
+                          className="w-24 h-24 bg-black border-2 border-orange-600 flex items-center justify-center text-3xl font-black text-white shadow-lg overflow-hidden uppercase relative group cursor-pointer"
+                        >
+                          {uploadingAvatar ? (
+                            <Loader2 className="animate-spin text-orange-600" size={32} />
+                          ) : avatarUrl ? (
+                            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            fullName ? fullName[0].toUpperCase() : session?.user?.email[0].toUpperCase()
+                          )}
+
+                          {/* Overlay en hover */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Camera size={24} className="text-white" />
+                          </div>
+                        </button>
                     </div>
                 </div>
 
@@ -181,20 +233,20 @@ export default function ProfilePage() {
                     <hr className="border-neutral-800" />
 
                     <div className="flex flex-col gap-3">
-                        <button 
+                        <button
                             onClick={updateProfile}
                             disabled={isSaving}
-                            className="w-full bg-orange-600 text-black hover:bg-orange-500 p-4 rounded-none font-black uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70 text-sm"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-white text-black hover:bg-orange-600 hover:text-white disabled:opacity-50"
                         >
-                            {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+                            {isSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
                             {isSaving ? 'Guardando...' : 'Guardar Cambios'}
                         </button>
 
-                        <button 
+                        <button
                             onClick={handleLogout}
-                            className="w-full text-red-500 hover:bg-red-950/20 border border-neutral-800 p-4 rounded-none font-bold uppercase tracking-wide text-xs flex items-center justify-center gap-2 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-neutral-900 text-red-500 border border-neutral-700 hover:border-red-500 hover:text-red-400"
                         >
-                            <LogOut size={18} /> Cerrar Sesión
+                            <LogOut size={14} /> Cerrar Sesión
                         </button>
                     </div>
                 </div>
@@ -207,7 +259,7 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
                     <Shirt className="text-orange-600"/> Mi Catálogo
                 </h2>
-                <Link href="/vender" className="bg-white hover:bg-gray-200 text-black px-4 py-2 font-bold uppercase text-xs tracking-wide transition-colors">
+                <Link href="/vender" className="flex items-center gap-2 px-4 py-2 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-white text-black hover:bg-orange-600 hover:text-white">
                     + Vender Prenda
                 </Link>
             </div>

@@ -1,13 +1,10 @@
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-// IMPORTAMOS EL NAVBAR
-import Navbar from '@/app/components/Navbar'; 
-// IMPORTAMOS EL SEARCHBAR
 import SearchBar from '@/app/components/SearchBar';
 
 // COMPONENTES EXISTENTES
 import ImageCarousel from '@/app/components/ImageCarousel';
 import ProductGrid from '@/app/components/ProductGrid';
+import PaginatedProductGrid from '@/app/components/PaginatedProductGrid';
 
 // NUEVO COMPONENTE (Asegúrate de haber creado el archivo BazaarShowcase.tsx que te pasé antes)
 import BazaarShowcase from '@/app/components/BazaarShowcase'; 
@@ -60,8 +57,8 @@ export default async function Home() {
       {/* --- HERO SECTION (RESTAURO EL ORIGINAL EXACTO) --- */}
       <div className="relative border-b border-neutral-800">
         
-        {/* Carrusel de fondo: Mantenemos tu clase opacity-200 */}
-        <div className="absolute inset-0 opacity-200">
+        {/* Carrusel de fondo */}
+        <div className="absolute inset-0">
            <ImageCarousel />
         </div>
 
@@ -104,7 +101,7 @@ export default async function Home() {
                 Explorar <span className="text-white">Todo el Inventario</span>
             </h2>
           </div>
-          <ProductGrid products={products} error={error} />
+          <PaginatedProductGrid products={products} />
         </div>
 
       </div>
