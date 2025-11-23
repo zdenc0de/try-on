@@ -215,17 +215,68 @@ Responde ÚNICAMENTE con JSON válido (sin markdown, sin explicaciones):
 
     // Ordenar por score
     scoredProducts.sort((a, b) => b._score - a._score);
-    
+
     // Filtrar productos con score 0 si hay productos con score > 0
     const hasScored = scoredProducts.some(p => p._score > 0);
-    const finalProducts = hasScored 
+    let finalProducts = hasScored
       ? scoredProducts.filter(p => p._score > 0)
       : scoredProducts;
 
+    // PASO 5: Filtrado inteligente con Gemini
+    // Si hay más de 3 productos, pedimos a Gemini que filtre los irrelevantes
+    if (finalProducts.length > 3) {
+      console.log("🧠 Aplicando filtrado inteligente con Gemini...");
+
+      const productSummary = finalProducts.map(p => ({
+        id: p.id,
+        title: p.title,
+        tags: (p.tags || []).slice(0, 10) // Limitar tags para no exceder tokens
+      }));
+
+      const filterPrompt = `El usuario busca: "${userQuery}"
+
+Aquí están los productos candidatos:
+${JSON.stringify(productSummary, null, 2)}
+
+TAREA: Determina qué productos son REALMENTE relevantes para "${userQuery}".
+
+REGLAS:
+- Un cárdigan NO es ropa de playa
+- Botas vaqueras NO son ropa de playa
+- Sé estricto: solo incluye productos que alguien usaría en ese contexto
+- Si ninguno es relevante, devuelve array vacío
+
+Responde SOLO con un array JSON de IDs relevantes (sin markdown):
+["id1", "id2", ...]`;
+
+      try {
+        const filterResult = await model.generateContent(filterPrompt);
+        const filterText = filterResult.response.text()
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+        console.log("🎯 IDs relevantes según Gemini:", filterText);
+
+        const relevantIds = JSON.parse(filterText);
+
+        if (Array.isArray(relevantIds) && relevantIds.length > 0) {
+          finalProducts = finalProducts.filter(p => relevantIds.includes(p.id));
+          console.log(`✅ Filtrado: ${finalProducts.length} productos relevantes`);
+        } else {
+          console.log("⚠️ Gemini no encontró productos relevantes");
+          finalProducts = [];
+        }
+      } catch (filterError) {
+        console.error("❌ Error en filtrado Gemini:", filterError);
+        // Mantener resultados originales si falla el filtro
+      }
+    }
+
     console.log(`✨ Resultados finales: ${finalProducts.length} productos`);
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       products: finalProducts,
       aiTags: { direct, related }
     };
