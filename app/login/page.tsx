@@ -56,54 +56,54 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+      <div className="bg-neutral-950 p-8 w-full max-w-md border border-neutral-800">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-3xl font-black uppercase tracking-tight text-orange-600 mb-2">
             {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
           </h1>
-          <p className="text-gray-500">Bienvenido a ReVibe AI</p>
+          <p className="text-neutral-500 font-mono text-sm">Bienvenido a Try On</p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+              <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 font-mono">Nombre</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black text-black"
+                className="w-full p-3 border border-neutral-800 bg-black outline-none focus:border-orange-600 text-white transition-colors"
                 required
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
+            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 font-mono">Correo</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black text-black"
+              className="w-full p-3 border border-neutral-800 bg-black outline-none focus:border-orange-600 text-white transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 font-mono">Contraseña</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black text-black"
+              className="w-full p-3 border border-neutral-800 bg-black outline-none focus:border-orange-600 text-white transition-colors"
               required
             />
           </div>
 
           <button
             disabled={loading}
-            className="w-full bg-black text-white p-4 rounded-xl font-bold flex items-center justify-center hover:bg-gray-800 transition-colors"
+            className="w-full bg-white text-black p-4 font-bold uppercase text-sm flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors disabled:opacity-50"
           >
             {loading ? <Loader2 className="animate-spin" /> : (isSignUp ? 'Registrarse' : 'Entrar')}
           </button>
@@ -113,7 +113,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-gray-600 hover:text-black underline"
+            className="text-sm text-neutral-500 hover:text-orange-600 transition-colors font-mono"
           >
             {isSignUp ? '¿Ya tienes cuenta? Inicia Sesión' : '¿Nuevo aquí? Regístrate'}
           </button>
