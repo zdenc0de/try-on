@@ -1,18 +1,20 @@
 import Link from 'next/link';
-// Importamos el cliente de servidor para traer los productos
+// IMPORTANTE: Usamos tu cliente de servidor nuevo
 import { createClient } from '@/lib/supabase/server'; 
 import { ShoppingBag, Sparkles } from 'lucide-react';
-// Importamos nuestro nuevo componente de Navbar
+// IMPORTANTE: Usamos tu Navbar dinámico
 import NavbarUser from '@/app/components/NavbarUser';
+// IMPORTANTE: Usamos el SearchBar de tu compañero
+import SearchBar from '@/app/components/SearchBar'; 
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   
-  // 1. INICIALIZAR SUPABASE (SERVER)
+  // 1. INICIALIZAR SUPABASE (SERVER) - Tu lógica
   const supabase = await createClient();
 
-  // 2. OBTENER PRODUCTOS + DATOS DEL VENDEDOR
+  // 2. OBTENER PRODUCTOS + DATOS DEL VENDEDOR - Tu lógica (necesaria para que no falle)
   const { data: products, error } = await supabase
     .from('products')
     .select(`
@@ -39,7 +41,7 @@ export default async function Home() {
             <span className="text-xl font-bold tracking-tight">ReVibe AI</span>
           </Link>
 
-          {/* AQUÍ ESTÁ EL CAMBIO: Usamos el componente dinámico */}
+          {/* Navbar Dinámico (Tu cambio) */}
           <div>
             <NavbarUser />
           </div>
@@ -58,18 +60,9 @@ export default async function Home() {
             No busques por palabras clave. Describe tu plan, tu vibra o sube una foto, y nuestra IA encontrará el outfit perfecto.
           </p>
 
+          {/* SearchBar del compañero */}
           <div className="max-w-2xl mx-auto relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Sparkles className="text-purple-500 animate-pulse" size={20} />
-            </div>
-            <input 
-              type="text" 
-              placeholder="Ej: 'Tengo una cita en una galería de arte...'"
-              className="block w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl text-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all shadow-sm group-hover:shadow-md"
-            />
-            <button className="absolute inset-y-2 right-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 rounded-xl font-medium transition-colors">
-              Buscar
-            </button>
+             <SearchBar /> 
           </div>
         </div>
 
@@ -93,7 +86,7 @@ export default async function Home() {
 
           {/* GRID DE PRODUCTOS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products?.map((product) => (
+            {products?.map((product:any) => (
               <div key={product.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
                 
                 {/* Imagen */}
@@ -113,7 +106,7 @@ export default async function Home() {
                   <div>
                     <h3 className="font-bold text-gray-900 truncate">{product.title}</h3>
                     
-                    {/* MOSTRAR VENDEDOR */}
+                    {/* MOSTRAR VENDEDOR (Tu cambio) */}
                     {product.profiles && (
                       <div className="text-xs text-purple-600 font-medium mb-1">
                         @{product.profiles.instagram_handle || 'vendedor'}
