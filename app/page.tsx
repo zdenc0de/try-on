@@ -33,7 +33,7 @@ export default async function Home() {
       <div className="relative border-b border-neutral-800">
         
         {/* Carrusel de fondo */}
-        <div className="absolute inset-0 opacity-40">
+        <div className="absolute inset-0 opacity-200">
            <ImageCarousel />
         </div>
 
