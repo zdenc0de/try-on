@@ -116,7 +116,7 @@ export default function ProfilePage() {
     const result = await updateAvatar(formData)
 
     if (result.success) {
-      setAvatarUrl(result.url)
+      setAvatarUrl(result.url || null)
       toast.success('Foto actualizada')
     } else {
       toast.error(result.error)
@@ -148,7 +148,7 @@ export default function ProfilePage() {
             <div className="bg-neutral-950 border border-neutral-800 rounded-none overflow-hidden">
                 
                 {/* Banner Decorativo */}
-                <div className="h-32 bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 relative">
+                <div className="h-32 bg-linear-to-r from-orange-600 via-orange-500 to-orange-700 relative">
                     <div className="absolute -bottom-10 left-8">
                         {/* Input oculto para seleccionar archivo */}
                         <input
@@ -157,6 +157,7 @@ export default function ProfilePage() {
                           onChange={handleAvatarChange}
                           accept="image/*"
                           className="hidden"
+                          title="Seleccionar imagen de avatar"
                         />
 
                         {/* Avatar clickeable */}
@@ -168,6 +169,7 @@ export default function ProfilePage() {
                           {uploadingAvatar ? (
                             <Loader2 className="animate-spin text-orange-600" size={32} />
                           ) : avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                           ) : (
                             fullName ? fullName[0].toUpperCase() : session?.user?.email[0].toUpperCase()

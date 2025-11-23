@@ -3,7 +3,6 @@ import SearchBar from '@/app/components/SearchBar';
 
 // COMPONENTES EXISTENTES
 import ImageCarousel from '@/app/components/ImageCarousel';
-import ProductGrid from '@/app/components/ProductGrid';
 import PaginatedProductGrid from '@/app/components/PaginatedProductGrid';
 
 // NUEVO COMPONENTE (Asegúrate de haber creado el archivo BazaarShowcase.tsx que te pasé antes)
@@ -16,7 +15,7 @@ export default async function Home() {
   const supabase = await createClient();
 
   // 1. Traemos productos con sus perfiles
-  const { data: products, error } = await supabase
+  const { data: products} = await supabase
     .from('products')
     .select(`
       *,

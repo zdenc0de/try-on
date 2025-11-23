@@ -8,19 +8,21 @@ import { debugProducts } from '@/app/actions/debug-products';
 import { enrichExistingProducts } from '@/app/actions/enrich-existing-products';
 
 interface DebugResult {
-  uniqueTags: string[];
-  products: Array<{
+  uniqueTags?: string[];
+  products?: Array<{
     title: string;
     tags?: string[];
   }>;
+  error?: string;
 }
 
 interface EnrichResult {
   success: boolean;
-  total: number;
-  processed: number;
-  errors: number;
+  total?: number;
+  processed?: number;
+  errors?: number;
   message?: string;
+  error?: string;
 }
 
 export default function AdminDebugPage() {
@@ -137,7 +139,7 @@ export default function AdminDebugPage() {
             <div className="space-y-2 text-sm font-mono">
               <p>Total: {enrichResult.total} productos</p>
               <p>✅ Procesados: {enrichResult.processed}</p>
-              {enrichResult.errors > 0 && (
+              {(enrichResult.errors ?? 0) > 0 && (
                 <p className="text-red-400">❌ Errores: {enrichResult.errors}</p>
               )}
             </div>
@@ -185,7 +187,7 @@ export default function AdminDebugPage() {
                   </span>
                 </h2>
                 <div className="space-y-3">
-                  {result.products.map((product: any, i: number) => (
+                  {result.products.map((product, i: number) => (
                     <div 
                       key={i}
                       className="bg-neutral-800/50 hover:bg-neutral-800 p-4 rounded-lg border border-neutral-700 transition-colors"
@@ -216,7 +218,6 @@ export default function AdminDebugPage() {
                 </div>
               </div>
             )}
-
           </div>
         )}
 

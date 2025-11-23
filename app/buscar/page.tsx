@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { searchProducts } from '@/app/actions/smart-search';
 import ProductGrid from '@/app/components/ProductGrid';
 import SearchBar from '@/app/components/SearchBar';
-import { Sparkles, Frown, ArrowLeft, Target, Link2 } from 'lucide-react';
+import {Frown, ArrowLeft, Target, Link2 } from 'lucide-react';
 
 export default async function SearchPage({
   searchParams,
@@ -102,7 +102,7 @@ export default async function SearchPage({
 
         {/* Resultados */}
         {products && products.length > 0 ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 pb-8">
             <p className="text-neutral-500 text-sm mb-6">
               {products.length} {products.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
             </p>

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Instagram, Tag, Shirt } from 'lucide-react';
+import { ArrowLeft, Instagram, Tag } from 'lucide-react';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -49,6 +49,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* Imagen del Producto */}
           <div className="relative aspect-[3/4] bg-neutral-900 border border-neutral-800 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={product.image_url}
               alt={product.title}
@@ -85,12 +86,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 Descripción
               </h3>
               <p className="text-neutral-300 leading-relaxed">
-                {product.description}
+                {product.description || 'Sin descripción'}
               </p>
             </div>
 
             {/* Tags */}
-            {product.tags && product.tags.length > 0 && (
+            {product.tags && Array.isArray(product.tags) && product.tags.length > 0 && (
               <div className="border-t border-neutral-800 pt-6">
                 <h3 className="font-mono text-xs text-neutral-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Tag size={12} /> Tags
@@ -118,9 +119,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {/* Avatar */}
                   <div className="w-12 h-12 bg-black border border-neutral-700 flex items-center justify-center overflow-hidden">
                     {product.profiles.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={product.profiles.avatar_url}
-                        alt={product.profiles.full_name}
+                        alt={product.profiles.full_name || 'Avatar'}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -133,7 +135,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   {/* Info */}
                   <div className="flex-1">
                     <Link
-                      href={`/vendedor/${product.profiles.id}`}
+                      href={`/bazar/${product.profiles.id}`}
                       className="font-bold uppercase text-sm hover:text-orange-600 transition-colors"
                     >
                       {product.profiles.full_name || 'Vendedor'}
