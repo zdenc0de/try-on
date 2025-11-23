@@ -1,8 +1,4 @@
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-// IMPORTAMOS EL NAVBAR
-import Navbar from '@/app/components/Navbar'; 
-// IMPORTAMOS EL SEARCHBAR
 import SearchBar from '@/app/components/SearchBar';
 
 // COMPONENTES EXISTENTES
@@ -60,8 +56,8 @@ export default async function Home() {
       {/* --- HERO SECTION (RESTAURO EL ORIGINAL EXACTO) --- */}
       <div className="relative border-b border-neutral-800">
         
-        {/* Carrusel de fondo: Mantenemos tu clase opacity-200 */}
-        <div className="absolute inset-0 opacity-200">
+        {/* Carrusel de fondo */}
+        <div className="absolute inset-0">
            <ImageCarousel />
         </div>
 
