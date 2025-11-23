@@ -73,7 +73,7 @@ export default function LoginPage() {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black"
+                className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black text-black"
                 required
               />
             </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black text-black"
               required
             />
           </div>
@@ -96,7 +96,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black"
+              className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-black text-black"
               required
             />
           </div>
