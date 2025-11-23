@@ -121,7 +121,7 @@ export default function ProfilePage() {
             <div className="bg-neutral-950 border border-neutral-800 rounded-none overflow-hidden">
                 
                 {/* Banner Decorativo */}
-                <div className="h-32 bg-gradient-to-r from-orange-600 via-orange-500 to-orange-700 relative">
+                <div className="h-32 bg-linear-to-r from-orange-600 via-orange-500 to-orange-700 relative">
                     <div className="absolute -bottom-10 left-8">
                         <div className="w-24 h-24 bg-black rounded-none border-2 border-orange-600 flex items-center justify-center text-3xl font-black text-white shadow-lg overflow-hidden uppercase">
                             {fullName ? fullName[0].toUpperCase() : session?.user?.email[0].toUpperCase()}

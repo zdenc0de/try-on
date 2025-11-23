@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { analyzeClothingImage } from '@/app/actions/analyze-image';
 import { saveProduct } from '@/app/actions/save-product';
-import { Camera, Loader2, CheckCircle, UploadCloud } from 'lucide-react';
+import { Camera, Loader2, CheckCircle, UploadCloud, Info } from 'lucide-react'; // Importamos Info
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation'; // Para navegación fluida
 
 export default function SellerForm() {
   const { register, handleSubmit, setValue } = useForm();
+  const router = useRouter();
 
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,7 +72,9 @@ export default function SellerForm() {
 
     if (result.success) {
       toast.success('Prenda publicada');
-      window.location.href = '/';
+      // Usamos router para no recargar toda la página
+      router.push('/');
+      router.refresh(); 
     } else {
       toast.error(result.error);
     }
@@ -122,7 +126,20 @@ export default function SellerForm() {
 
       {/* Formulario */}
       {analyzed && (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+          
+          {/* --- NOTA DE ADVERTENCIA AGREGADA --- */}
+          <div className="bg-yellow-900/20 border border-yellow-700/50 p-4 text-xs text-yellow-500 flex gap-3 items-start rounded-sm">
+            <Info className="shrink-0 mt-0.5" size={18} />
+            <div className="font-mono">
+              <span className="font-bold block mb-1 text-yellow-400 uppercase tracking-wide">Verificación Requerida</span>
+              Gemini puede omitir detalles como la talla exacta o marca. 
+              <span className="block mt-2 text-yellow-200/80">
+                Por favor revisa y corrige la información antes de publicar.
+              </span>
+            </div>
+          </div>
+          {/* ----------------------------------- */}
 
           <div>
             <label className="text-xs font-mono text-neutral-500 uppercase tracking-wider">Título</label>
