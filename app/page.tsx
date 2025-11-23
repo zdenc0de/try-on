@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { Search, ShoppingBag, PlusCircle, Sparkles } from 'lucide-react';
+import { ShoppingBag, PlusCircle, Sparkles } from 'lucide-react';
+import SearchBar from './components/SearchBar'; // <--- IMPORTA EL COMPONENTE AQUÍ
 
-// Esta línea fuerza a que la página no se guarde en caché estático,
-// así siempre verás los productos nuevos al recargar.
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
@@ -12,7 +11,7 @@ export default async function Home() {
   const { data: products, error } = await supabase
     .from('products')
     .select('*')
-    .order('created_at', { ascending: false }); // Los más nuevos primero
+    .order('created_at', { ascending: false });
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
@@ -41,7 +40,7 @@ export default async function Home() {
 
       <main className="max-w-6xl mx-auto px-4 py-12">
         
-        {/* --- HERO SECTION (BUSCADOR IA) --- */}
+        {/* --- HERO SECTION --- */}
         <div className="text-center mb-16 space-y-6">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900">
             Tu estilo, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">decodificado.</span>
@@ -50,20 +49,9 @@ export default async function Home() {
             No busques por palabras clave. Describe tu plan, tu vibra o sube una foto, y nuestra IA encontrará el outfit perfecto de segunda mano.
           </p>
 
-          {/* Barra de búsqueda (Visual por ahora) */}
-          <div className="max-w-2xl mx-auto relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Sparkles className="text-purple-500 animate-pulse" size={20} />
-            </div>
-            <input 
-              type="text" 
-              placeholder="Ej: 'Tengo una cita en una galería de arte y quiero verme intelectual...'"
-              className="block w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl text-lg focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all shadow-sm group-hover:shadow-md"
-            />
-            <button className="absolute inset-y-2 right-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 rounded-xl font-medium transition-colors">
-              Buscar
-            </button>
-          </div>
+          {/* AQUÍ ESTÁ EL NUEVO COMPONENTE */}
+          <SearchBar /> 
+
         </div>
 
         {/* --- RESULTADOS / FEED --- */}
@@ -73,7 +61,6 @@ export default async function Home() {
             Recién llegados
           </h2>
 
-          {/* Estado de Error o Carga vacía */}
           {error && <p className="text-red-500">Error cargando productos: {error.message}</p>}
           
           {products && products.length === 0 && (
@@ -89,7 +76,6 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products?.map((product) => (
               <div key={product.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
-                {/* Imagen */}
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
                   <img 
                     src={product.image_url} 
@@ -101,7 +87,6 @@ export default async function Home() {
                   </div>
                 </div>
 
-                {/* Info */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-bold text-gray-900 truncate">{product.title}</h3>
