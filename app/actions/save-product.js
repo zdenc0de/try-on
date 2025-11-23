@@ -1,58 +1,48 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'; // Asegúrate que este archivo exista donde acordamos
+import { createClient } from '@/lib/supabase/server'; // Usamos el cliente seguro de servidor
 import { revalidatePath } from 'next/cache';
 
 export async function saveProduct(formData) {
-  console.log("💾 Iniciando guardado de producto...");
+  console.log("💾 Guardando producto...");
 
-  // 1. Extraer datos del FormData
-  const imageFile = formData.get('image'); // El archivo físico
+  // 1. AUTENTICACIÓN SEGURA (Cookies)
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: "Debes iniciar sesión para vender." };
+  }
+
+  // 2. Extraer datos
+  const imageFile = formData.get('image');
   const title = formData.get('title');
   const description = formData.get('description');
   const price = formData.get('price');
   const category = formData.get('category');
-  const tagsString = formData.get('tags'); // Viene como texto "rock, azul, vintage"
+  const tagsString = formData.get('tags');
 
-  // Validación básica
   if (!imageFile || !title) {
-    return { success: false, error: "Faltan datos obligatorios (imagen o título)" };
+    return { success: false, error: "Faltan datos obligatorios" };
   }
 
   try {
-    // ---------------------------------------------------------
-    // PASO A: Subir la imagen al Storage de Supabase
-    // ---------------------------------------------------------
-    
-    // Generamos un nombre único para no sobrescribir archivos
-    // ej: 1715000000-mifoto.jpg
-    const fileName = `${Date.now()}-${imageFile.name.replace(/\s/g, '_')}`;
+    // 3. Subir imagen a Supabase Storage
+    // Usamos timestamp + random para evitar colisiones de nombre
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
-    const { data: uploadData, error: uploadError } = await supabase
-      .storage
-      .from('products') // El nombre del bucket que creamos en SQL
-      .upload(fileName, imageFile, {
-        cacheControl: '3600',
-        upsert: false
-      });
+    const { error: uploadError } = await supabase.storage
+      .from('products')
+      .upload(fileName, imageFile);
 
-    if (uploadError) {
-      console.error("Error subiendo imagen:", uploadError);
-      throw new Error("Fallo al subir la imagen");
-    }
+    if (uploadError) throw new Error("Error subiendo la imagen: " + uploadError.message);
 
-    // Obtenemos la URL Pública para guardarla en la BD
-    const { data: { publicUrl } } = supabase
-      .storage
+    const { data: { publicUrl } } = supabase.storage
       .from('products')
       .getPublicUrl(fileName);
 
-    // ---------------------------------------------------------
-    // PASO B: Guardar los datos en la Tabla 'products'
-    // ---------------------------------------------------------
-    
-    // Convertimos los tags de string a array para PostgreSQL
-    // "rock, azul" -> ["rock", "azul"]
+    // 4. Guardar en Base de Datos vinculando al USUARIO
     const tagsArray = tagsString ? tagsString.split(',').map(tag => tag.trim()) : [];
 
     const { error: dbError } = await supabase
@@ -64,23 +54,19 @@ export async function saveProduct(formData) {
         category,
         tags: tagsArray,
         image_url: publicUrl,
-        // Opcional: Si quieres guardar el JSON crudo de gemini puedes pasarlo también
+        user_id: user.id // <--- AQUÍ OCURRE LA MAGIA (Vinculamos con el perfil)
       });
 
-    if (dbError) {
-      console.error("Error guardando en base de datos:", dbError);
-      throw new Error("Fallo al guardar datos del producto");
-    }
+    if (dbError) throw dbError;
 
-    // 3. Limpiar caché para que aparezca en el inicio
+    // 5. Limpiar caché para que se vea inmediato
     revalidatePath('/'); 
-    revalidatePath('/vender');
+    revalidatePath('/perfil'); // Para que aparezca en su catálogo
 
-    console.log("✅ Producto guardado exitosamente");
     return { success: true };
 
   } catch (error) {
-    console.error("❌ Error General:", error);
+    console.error("❌ Error Save:", error);
     return { success: false, error: error.message };
   }
 }
