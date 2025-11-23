@@ -132,9 +132,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
                   {/* Info */}
                   <div className="flex-1">
-                    <p className="font-bold uppercase text-sm">
+                    <Link
+                      href={`/vendedor/${product.profiles.id}`}
+                      className="font-bold uppercase text-sm hover:text-orange-600 transition-colors"
+                    >
                       {product.profiles.full_name || 'Vendedor'}
-                    </p>
+                    </Link>
                     {product.profiles.instagram_handle && (
                       <a
                         href={`https://instagram.com/${product.profiles.instagram_handle}`}

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { searchProducts } from '@/app/actions/smart-search';
-import ProductGrid from '@/app/components/ProductGrid'; 
+import ProductGrid from '@/app/components/ProductGrid';
+import SearchBar from '@/app/components/SearchBar';
 import { Sparkles, Frown, ArrowLeft, Target, Link2 } from 'lucide-react';
 
 export default async function SearchPage({
@@ -26,17 +27,24 @@ export default async function SearchPage({
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
       
-      <main className="max-w-[1400px] mx-auto px-4 py-12">
+      <main className="max-w-[1400px] mx-auto px-4 ">
         
         {/* Header de Búsqueda */}
         <div className="mb-12">
-          <Link 
-            href="/" 
-            className="text-neutral-500 hover:text-white flex items-center gap-2 mb-6 transition-colors text-sm group"
-          >
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Volver al inicio
-          </Link>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <Link
+              href="/"
+              className="text-neutral-500 hover:text-white flex items-center gap-2 transition-colors text-sm group"
+            >
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+              Volver al inicio
+            </Link>
+
+            {/* SearchBar para nueva búsqueda */}
+            <div className="flex-1 max-w-md">
+              <SearchBar />
+            </div>
+          </div>
 
           <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
             Resultados para <span className="text-orange-600">"{query}"</span>
@@ -44,38 +52,48 @@ export default async function SearchPage({
 
           {/* Mostramos el razonamiento de la IA (Factor WOW) */}
           {success && (aiTags.direct.length > 0 || aiTags.related.length > 0) && (
-            <div className="space-y-3">
-              
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
               {/* Tags directos */}
               {aiTags.direct.length > 0 && (
-                <div className="flex flex-wrap gap-2 items-center text-sm bg-neutral-900/50 p-4 rounded-xl border border-neutral-800">
-                  <Target className="text-orange-500 mr-2" size={18} />
-                  <span className="text-neutral-400 font-medium">Buscando directamente:</span>
-                  {aiTags.direct.map((tag: string, i: number) => (
-                    <span 
-                      key={i} 
-                      className="bg-orange-600/20 text-orange-400 border border-orange-600/30 px-2 py-1 rounded text-xs uppercase font-mono"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+                <details className="bg-neutral-900/50 border border-neutral-800 group">
+                  <summary className="flex items-center gap-2 p-4 cursor-pointer list-none">
+                    <Target className="text-orange-500" size={18} />
+                    <span className="text-neutral-400 font-medium text-sm flex-1">Buscando directamente:</span>
+                    <span className="text-neutral-600 text-xs">{aiTags.direct.length} tags</span>
+                  </summary>
+                  <ul className="space-y-1 px-4 pb-4">
+                    {aiTags.direct.map((tag: string, i: number) => (
+                      <li
+                        key={i}
+                        className="text-orange-400 text-xs uppercase font-mono"
+                      >
+                        #{tag}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )}
 
               {/* Tags relacionados */}
               {aiTags.related.length > 0 && (
-                <div className="flex flex-wrap gap-2 items-center text-sm bg-neutral-900/30 p-4 rounded-xl border border-neutral-800">
-                  <Link2 className="text-purple-500 mr-2" size={18} />
-                  <span className="text-neutral-400 font-medium">También considerando:</span>
-                  {aiTags.related.map((tag: string, i: number) => (
-                    <span 
-                      key={i} 
-                      className="bg-purple-600/20 text-purple-400 border border-purple-600/30 px-2 py-1 rounded text-xs uppercase font-mono"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+                <details className="bg-neutral-900/30 border border-neutral-800 group">
+                  <summary className="flex items-center gap-2 p-4 cursor-pointer list-none">
+                    <Link2 className="text-purple-500" size={18} />
+                    <span className="text-neutral-400 font-medium text-sm flex-1">También considerando:</span>
+                    <span className="text-neutral-600 text-xs">{aiTags.related.length} tags</span>
+                  </summary>
+                  <ul className="space-y-1 px-4 pb-4">
+                    {aiTags.related.map((tag: string, i: number) => (
+                      <li
+                        key={i}
+                        className="text-purple-400 text-xs uppercase font-mono"
+                      >
+                        #{tag}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )}
 
             </div>

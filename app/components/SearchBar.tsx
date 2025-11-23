@@ -1,18 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Terminal, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Terminal, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Reset loading cuando cambian los searchParams (navegación completada)
+  useEffect(() => {
+    setIsLoading(false);
+  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
     if (query.trim()) {
-      // Redirige a la página /buscar (o donde decidan manejar la búsqueda)
-      // encodeURIComponent es vital para búsquedas con espacios o tildes
+      setIsLoading(true);
       router.push(`/buscar?q=${encodeURIComponent(query)}`);
     }
   };
@@ -41,12 +47,22 @@ export default function SearchBar() {
         />
 
         {/* Botón RUN */}
-        <button 
+        <button
           type="submit"
-          className="bg-white hover:bg-orange-600 text-black hover:text-white font-bold uppercase text-sm px-6 py-4 transition-colors duration-200 flex items-center gap-2"
+          disabled={isLoading}
+          className="bg-white hover:bg-orange-600 text-black hover:text-white font-bold uppercase text-sm px-6 py-4 transition-colors duration-200 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Run
-          <ArrowRight size={16} />
+          {isLoading ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Buscando...
+            </>
+          ) : (
+            <>
+              Run
+              <ArrowRight size={16} />
+            </>
+          )}
         </button>
       </div>
     </form>
