@@ -22,7 +22,7 @@ export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
       </div>
 
       {/* Grid horizontal de Bazares */}
-      <div className="flex gap-6 overflow-x-auto pb-4">
+      <div className="flex gap-6 overflow-x-auto pb-4 custom-scrollbar">
         {sellers.map((seller) => (
           <div key={seller.id} className="group bg-neutral-900/50 border border-neutral-800 hover:border-orange-600/50 transition-all duration-300 flex flex-col w-[280px] md:w-[320px] lg:w-[380px] flex-shrink-0">
             

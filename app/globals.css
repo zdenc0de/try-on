@@ -26,3 +26,22 @@ body {
   background-color: var(--accent);
   color: black;
 }
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #171717;
+  border-radius: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
