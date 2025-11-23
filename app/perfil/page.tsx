@@ -233,20 +233,20 @@ export default function ProfilePage() {
                     <hr className="border-neutral-800" />
 
                     <div className="flex flex-col gap-3">
-                        <button 
+                        <button
                             onClick={updateProfile}
                             disabled={isSaving}
-                            className="w-full bg-orange-600 text-black hover:bg-orange-500 p-4 rounded-none font-black uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70 text-sm"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-white text-black hover:bg-orange-600 hover:text-white disabled:opacity-50"
                         >
-                            {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+                            {isSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
                             {isSaving ? 'Guardando...' : 'Guardar Cambios'}
                         </button>
 
-                        <button 
+                        <button
                             onClick={handleLogout}
-                            className="w-full text-red-500 hover:bg-red-950/20 border border-neutral-800 p-4 rounded-none font-bold uppercase tracking-wide text-xs flex items-center justify-center gap-2 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-neutral-900 text-red-500 border border-neutral-700 hover:border-red-500 hover:text-red-400"
                         >
-                            <LogOut size={18} /> Cerrar Sesión
+                            <LogOut size={14} /> Cerrar Sesión
                         </button>
                     </div>
                 </div>
@@ -259,7 +259,7 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
                     <Shirt className="text-orange-600"/> Mi Catálogo
                 </h2>
-                <Link href="/vender" className="bg-white hover:bg-gray-200 text-black px-4 py-2 font-bold uppercase text-xs tracking-wide transition-colors">
+                <Link href="/vender" className="flex items-center gap-2 px-4 py-2 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-white text-black hover:bg-orange-600 hover:text-white">
                     + Vender Prenda
                 </Link>
             </div>

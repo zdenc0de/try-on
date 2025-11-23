@@ -84,7 +84,7 @@ export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
             <div className="border-t border-neutral-800 p-3 bg-black">
                 <Link
                   href={`/vendedor/${seller.id}`}
-                  className="block w-full py-2 text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-neutral-900 transition-all text-center"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 font-bold uppercase text-xs tracking-wide transition-colors duration-200 bg-neutral-900 text-white border border-neutral-700 hover:border-orange-600 hover:text-orange-500"
                 >
                     Ver Perfil
                 </Link>

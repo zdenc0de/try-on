@@ -4,6 +4,7 @@ import SearchBar from '@/app/components/SearchBar';
 // COMPONENTES EXISTENTES
 import ImageCarousel from '@/app/components/ImageCarousel';
 import ProductGrid from '@/app/components/ProductGrid';
+import PaginatedProductGrid from '@/app/components/PaginatedProductGrid';
 
 // NUEVO COMPONENTE (Asegúrate de haber creado el archivo BazaarShowcase.tsx que te pasé antes)
 import BazaarShowcase from '@/app/components/BazaarShowcase'; 
@@ -100,7 +101,7 @@ export default async function Home() {
                 Explorar <span className="text-white">Todo el Inventario</span>
             </h2>
           </div>
-          <ProductGrid products={products} error={error} />
+          <PaginatedProductGrid products={products} />
         </div>
 
       </div>
