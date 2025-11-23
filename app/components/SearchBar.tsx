@@ -24,7 +24,7 @@ export default function SearchBar() {
   };
 
   return (
-    <form onSubmit={handleSearch} className="mt-12 max-w-3xl relative group mx-auto">
+    <form onSubmit={handleSearch} className="mt-6 sm:mt-8 md:mt-12 max-w-3xl relative group mx-auto">
       
       {/* Efecto de brillo naranja detrás */}
       <div className="absolute -inset-0.5 bg-orange-600 opacity-0 group-hover:opacity-20 group-focus-within:opacity-30 blur transition duration-300"></div>
@@ -42,15 +42,15 @@ export default function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Busco outfit para concierto underground..."
-          className="flex-1 bg-transparent text-white text-base md:text-lg font-mono py-4 px-2 focus:outline-none placeholder:text-neutral-700"
+          placeholder="Busco outfit para concierto..."
+          className="flex-1 bg-transparent text-white text-sm sm:text-base md:text-lg font-mono py-3 sm:py-4 px-2 focus:outline-none placeholder:text-neutral-700"
         />
 
         {/* Botón RUN */}
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-white hover:bg-orange-600 text-black hover:text-white font-bold uppercase text-sm px-6 py-4 transition-colors duration-200 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="bg-white hover:bg-orange-600 text-black hover:text-white font-bold uppercase text-xs sm:text-sm px-4 sm:px-6 py-3 sm:py-4 transition-colors duration-200 flex items-center gap-1 sm:gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>
