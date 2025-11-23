@@ -1,20 +1,20 @@
 import Link from 'next/link';
-// IMPORTANTE: Usamos tu cliente de servidor nuevo
-import { createClient } from '@/lib/supabase/server'; 
-import { ShoppingBag, Sparkles } from 'lucide-react';
-// IMPORTANTE: Usamos tu Navbar dinámico
-import NavbarUser from '@/app/components/NavbarUser';
-// IMPORTANTE: Usamos el SearchBar de tu compañero
-import SearchBar from '@/app/components/SearchBar'; 
+import { createClient } from '@/lib/supabase/server';
+// IMPORTAMOS EL NAVBAR
+import Navbar from '@/app/components/Navbar'; 
+// IMPORTAMOS EL SEARCHBAR (Ahora con diseño Terminal + Lógica)
+import SearchBar from '@/app/components/SearchBar';
+
+// COMPONENTES DE TU COMPAÑERO
+import ProductGrid from '@/app/components/ProductGrid';
+import ImageCarousel from '@/app/components/ImageCarousel';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   
-  // 1. INICIALIZAR SUPABASE (SERVER) - Tu lógica
   const supabase = await createClient();
 
-  // 2. OBTENER PRODUCTOS + DATOS DEL VENDEDOR - Tu lógica (necesaria para que no falle)
   const { data: products, error } = await supabase
     .from('products')
     .select(`
@@ -27,109 +27,50 @@ export default async function Home() {
     .order('created_at', { ascending: false });
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-      
-      {/* --- NAVBAR --- */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-black text-white p-2 rounded-lg group-hover:bg-purple-600 transition-colors duration-300">
-              <Sparkles size={20} />
-            </div>
-            <span className="text-xl font-bold tracking-tight">ReVibe AI</span>
-          </Link>
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
 
-          {/* Navbar Dinámico (Tu cambio) */}
-          <div>
-            <NavbarUser />
-          </div>
-
-        </div>
-      </nav>
-
-      <main className="max-w-6xl mx-auto px-4 py-12">
+      {/* --- HERO SECTION --- */}
+      <div className="relative border-b border-neutral-800">
         
-        {/* --- HERO SECTION --- */}
-        <div className="text-center mb-16 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900">
-            Tu estilo, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">decodificado.</span>
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            No busques por palabras clave. Describe tu plan, tu vibra o sube una foto, y nuestra IA encontrará el outfit perfecto.
-          </p>
-
-          {/* SearchBar del compañero */}
-          <div className="max-w-2xl mx-auto relative group">
-             <SearchBar /> 
-          </div>
+        {/* Carrusel de fondo */}
+        <div className="absolute inset-0 opacity-200">
+           <ImageCarousel />
         </div>
 
-        {/* --- RESULTADOS --- */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <ShoppingBag size={24} />
-            Recién llegados
+        {/* Contenido del Hero */}
+        <div className="relative z-10 max-w-[1400px] mx-auto px-4 pt-20 pb-24 md:pt-28 md:pb-32">
+
+          <div className="space-y-8">
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.85] uppercase">
+              Tu Estilo
+              <br />
+              <span className="text-neutral-500">Decodificado</span>
+              <span className="text-orange-600">.</span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-neutral-400 max-w-xl font-mono border-l-2 border-orange-600 pl-4">
+              Describe tu vibra. La IA rastrea el inventario de segunda mano por ti.
+            </p>
+
+            {/* BARRA DE BÚSQUEDA (Ahora es un componente limpio y funcional) */}
+            <SearchBar />
+            
+          </div>
+        </div>
+      </div>
+
+      {/* --- SECCIÓN DE PRODUCTOS --- */}
+      <div className="max-w-[1400px] mx-auto px-4 py-16">
+        <div className="flex items-end justify-between mb-10 border-b border-neutral-800 pb-4">
+          <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight">
+            Recién <span className="text-neutral-600">Llegados</span>
           </h2>
-
-          {error && <p className="text-red-500">Error cargando productos: {error.message}</p>}
-          
-          {products && products.length === 0 && (
-            <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-              <p className="text-gray-500 text-lg">Aún no hay ropa publicada.</p>
-              <Link href="/vender" className="text-purple-600 font-bold hover:underline mt-2 inline-block">
-                ¡Sé el primero en vender algo!
-              </Link>
-            </div>
-          )}
-
-          {/* GRID DE PRODUCTOS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products?.map((product:any) => (
-              <div key={product.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
-                
-                {/* Imagen */}
-                <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
-                  <img 
-                    src={product.image_url} 
-                    alt={product.title} 
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur text-xs font-bold px-2 py-1 rounded shadow-sm">
-                    ${product.price}
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-gray-900 truncate">{product.title}</h3>
-                    
-                    {/* MOSTRAR VENDEDOR (Tu cambio) */}
-                    {product.profiles && (
-                      <div className="text-xs text-purple-600 font-medium mb-1">
-                        @{product.profiles.instagram_handle || 'vendedor'}
-                      </div>
-                    )}
-
-                    <p className="text-sm text-gray-500 line-clamp-2 mt-1">{product.description}</p>
-                  </div>
-                  
-                  <div className="mt-4 flex flex-wrap gap-1">
-                    {product.tags?.slice(0, 3).map((tag: string, i: number) => (
-                      <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full uppercase tracking-wider font-semibold">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <span className="font-mono text-orange-600 text-xs uppercase">[Live]</span>
         </div>
 
-      </main>
+        <ProductGrid products={products} error={error} />
+      </div>
+
     </div>
   );
 }
