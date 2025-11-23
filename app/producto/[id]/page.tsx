@@ -1,189 +1,295 @@
-import { createClient } from '@/lib/supabase/server';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Instagram, Tag, Calendar, MapPin } from 'lucide-react';
+'use client'
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+import { Instagram, Save, LogOut, User, Sparkles, ArrowLeft, Loader2, Shirt, Camera } from 'lucide-react'
+import Link from 'next/link'
+import ProductGrid from '@/app/components/ProductGrid'
 
-export const dynamic = 'force-dynamic';
+export default function ProfilePage() {
+  const router = useRouter()
+  const supabase = createClient()
+  
+  // Referencia para el input de archivo oculto
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-interface ProductPageProps {
-  params: {
-    id: string;
-  };
-}
+  const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState<any>(null)
+  const [userProducts, setUserProducts] = useState<any[]>([]) 
+  
+  const [instagram, setInstagram] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('') // Nuevo estado
+  
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false) // Nuevo estado de carga de imagen
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params;
-  const supabase = await createClient();
+  useEffect(() => {
+    const getData = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        router.push('/login')
+        return
+      }
+      setSession(session)
 
-  const { data: product, error } = await supabase
-    .from('products')
-    .select(`
-      *,
-      profiles (
-        instagram_handle,
-        full_name,
-        avatar_url
-      )
-    `)
-    .eq('id', id)
-    .single();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('instagram_handle, full_name, avatar_url') // Pedimos avatar_url
+        .eq('id', session.user.id)
+        .single()
+      
+      if (profile) {
+        setInstagram(profile.instagram_handle || '')
+        setFullName(profile.full_name || session.user.user_metadata.full_name || '')
+        setAvatarUrl(profile.avatar_url || '')
+      }
 
-  if (error || !product) {
-    notFound();
+      const { data: products } = await supabase
+        .from('products')
+        .select(`*, profiles ( instagram_handle, full_name )`)
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+
+      if (products) setUserProducts(products)
+
+      setLoading(false)
+    }
+
+    getData()
+  }, [])
+
+  // --- LÓGICA DE SUBIDA DE IMAGEN ---
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setIsUploading(true)
+      const file = event.target.files?.[0]
+      if (!file) return
+
+      // 1. Subir al Storage
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${session.user.id}-${Math.random()}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // 2. Obtener URL Pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      // 3. Actualizar estado local inmediatamente para feedback visual
+      setAvatarUrl(publicUrl)
+
+      // 4. (Opcional) Guardar URL en base de datos inmediatamente
+      // O puedes esperar a que el usuario de clic en "Guardar Cambios"
+      // Aquí lo haremos inmediatamente para que no se pierda si recarga
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id)
+
+    } catch (error) {
+      console.error('Error subiendo imagen:', error)
+      alert('Error al subir la imagen')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
+  const updateProfile = async () => {
+    setIsSaving(true)
+    try {
+      const cleanInsta = instagram
+        .replace('https://www.instagram.com/', '')
+        .replace('https://instagram.com/', '')
+        .replace('@', '')
+        .replace(/\/$/, '')
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          instagram_handle: cleanInsta,
+          full_name: fullName,
+          // avatar_url: avatarUrl // Ya se actualizó al subir, pero no está de más
+          updated_at: new Date()
+        })
+        .eq('id', session.user.id)
+
+      if (error) throw error
       
-      {/* Header con botón de regreso */}
-      <div className="border-b border-neutral-800 sticky top-0 bg-black/95 backdrop-blur-sm z-50">
-        <div className="max-w-[1400px] mx-auto px-4 py-4">
-          <Link 
-            href="/"
-            className="inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors font-mono text-sm uppercase tracking-wider group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Volver al catálogo</span>
-          </Link>
-        </div>
-      </div>
+      setInstagram(cleanInsta)
+      alert('¡Perfil actualizado con éxito!')
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      alert('Error al guardar el perfil')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
-      {/* Contenido principal */}
-      <div className="max-w-[1400px] mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-2 gap-12">
-          
-          {/* Imagen del producto */}
-          <div className="space-y-4">
-            <div className="relative aspect-3/4 bg-neutral-950 border border-neutral-800 overflow-hidden">
-              <img
-                src={product.image_url}
-                alt={product.title}
-                className="object-cover w-full h-full"
-              />
-              
-              {/* Badge de estado */}
-              <div className="absolute top-4 right-4">
-                <span className="font-mono text-xs bg-orange-600 text-white px-3 py-1.5 uppercase tracking-wider">
-                  Disponible
-                </span>
-              </div>
-            </div>
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.refresh()
+    router.push('/login')
+  }
 
-            {/* Info técnica compacta */}
-            <div className="border border-neutral-800 bg-neutral-900/50 p-4 font-mono text-xs space-y-2">
-              <div className="flex items-center gap-2 text-neutral-400">
-                <Calendar className="w-3 h-3" />
-                <span>Publicado: {new Date(product.created_at).toLocaleDateString('es-MX')}</span>
-              </div>
-              <div className="flex items-center gap-2 text-neutral-400">
-                <Tag className="w-3 h-3" />
-                <span>ID: {product.id.slice(0, 8)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Información del producto */}
-          <div className="space-y-8">
-            
-            {/* Título y precio */}
-            <div className="space-y-4 border-b border-neutral-800 pb-8">
-              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-tight">
-                {product.title}
-              </h1>
-              
-              <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-black text-orange-600 font-mono">
-                  ${product.price}
-                </span>
-                <span className="text-neutral-500 font-mono text-sm uppercase">
-                  MXN
-                </span>
-              </div>
-            </div>
-
-            {/* Descripción */}
-            <div className="space-y-4">
-              <h2 className="text-sm font-mono uppercase tracking-wider text-neutral-500 border-l-2 border-orange-600 pl-3">
-                Descripción
-              </h2>
-              <p className="text-neutral-300 leading-relaxed text-lg">
-                {product.description}
-              </p>
-            </div>
-
-            {/* Tags */}
-            {product.tags && product.tags.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-sm font-mono uppercase tracking-wider text-neutral-500 border-l-2 border-orange-600 pl-3">
-                  Etiquetas
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {product.tags.map((tag: string, i: number) => (
-                    <span
-                      key={i}
-                      className="font-mono text-xs bg-neutral-800 text-neutral-400 px-3 py-1.5 uppercase tracking-wider border border-neutral-700"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Vendedor */}
-            {product.profiles && (
-              <div className="space-y-4 border-t border-neutral-800 pt-8">
-                <h2 className="text-sm font-mono uppercase tracking-wider text-neutral-500 border-l-2 border-orange-600 pl-3">
-                  Vendedor
-                </h2>
-                <div className="flex items-center gap-4 bg-neutral-900 border border-neutral-800 p-4">
-                  {product.profiles.avatar_url && (
-                    <img
-                      src={product.profiles.avatar_url}
-                      alt={product.profiles.full_name}
-                      className="w-12 h-12 rounded-full border-2 border-orange-600"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-bold text-white">
-                      {product.profiles.full_name}
-                    </p>
-                    {product.profiles.instagram_handle && (
-                      <a
-                        href={`https://instagram.com/${product.profiles.instagram_handle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-neutral-400 hover:text-orange-600 transition-colors font-mono"
-                      >
-                        <Instagram className="w-3 h-3" />
-                        @{product.profiles.instagram_handle}
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Botón de contacto */}
-            <div className="pt-4">
-              <button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-6 uppercase tracking-wider transition-colors border-2 border-orange-600 hover:border-orange-700 font-mono text-sm">
-                Contactar Vendedor
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      {/* Footer técnico */}
-      <div className="border-t border-neutral-800 mt-20">
-        <div className="max-w-[1400px] mx-auto px-4 py-6">
-          <p className="font-mono text-xs text-neutral-600 uppercase tracking-wider text-center">
-            By Codex
-          </p>
-        </div>
-      </div>
-
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white font-sans">
+      <Loader2 className="animate-spin mr-2 text-orange-600" /> Cargando perfil...
     </div>
-  );
+  )
+
+  return (
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white p-4 md:p-8">
+      
+      <div className="max-w-7xl mx-auto mb-6">
+        <Link href="/" className="text-neutral-400 hover:text-orange-600 flex items-center gap-2 transition-colors font-mono text-sm uppercase tracking-wide">
+          <ArrowLeft size={20} /> Volver al Inicio
+        </Link>
+      </div>
+
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* --- COLUMNA IZQUIERDA: EDITOR --- */}
+        <div className="lg:col-span-1 h-fit">
+            <div className="bg-neutral-950 border border-neutral-800 rounded-none overflow-hidden">
+                
+                {/* Banner */}
+                <div className="h-32 bg-linear-to-r from-orange-600 via-orange-500 to-orange-700 relative">
+                    <div className="absolute -bottom-10 left-8 group cursor-pointer">
+                        {/* INPUT OCULTO */}
+                        <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            onChange={handleImageUpload}
+                            accept="image/*"
+                            className="hidden"
+                        />
+                        
+                        {/* AVATAR CLICKABLE */}
+                        <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-24 h-24 bg-black rounded-none border-2 border-orange-600 flex items-center justify-center overflow-hidden shadow-lg relative"
+                        >
+                            {isUploading ? (
+                                <Loader2 className="animate-spin text-orange-600" />
+                            ) : avatarUrl ? (
+                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="text-3xl font-black text-white uppercase">
+                                    {fullName ? fullName[0] : session?.user?.email[0]}
+                                </div>
+                            )}
+
+                            {/* Overlay de cámara al hacer hover */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <Camera size={24} className="text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="pt-14 px-8 pb-8 space-y-8">
+                    {/* ... (El resto del código es igual, inputs de nombre e instagram) ... */}
+                    <div className="border-b border-neutral-800 pb-4">
+                        <h1 className="text-3xl font-black tracking-tight uppercase">{fullName || 'Usuario'}</h1>
+                        <p className="text-neutral-500 text-sm font-mono">{session?.user?.email}</p>
+                    </div>
+
+                    <div className="space-y-6">
+                         {/* Input Nombre */}
+                         <div className="group">
+                            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 font-mono">Nombre del Bazar</label>
+                            <div className="flex items-center bg-black border border-neutral-800 rounded-none p-3 focus-within:border-orange-600 transition-all">
+                                <User className="text-neutral-500 mr-3" size={20} />
+                                <input 
+                                    type="text" 
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    className="bg-transparent w-full outline-none text-white placeholder-neutral-600 font-sans"
+                                    placeholder="Nombre de tu marca"
+                                />
+                            </div>
+                        </div>
+                        
+                        {/* Input Instagram (Igual que antes) */}
+                        <div className="group">
+                            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2 font-mono">Instagram</label>
+                            <div className="flex items-center bg-black border border-neutral-800 rounded-none overflow-hidden focus-within:border-orange-600 transition-all">
+                                <div className="bg-neutral-900 p-3 flex items-center justify-center border-r border-neutral-800">
+                                    <Instagram className="text-orange-600" size={20} />
+                                </div>
+                                <div className="flex items-center w-full px-3">
+                                    <span className="text-neutral-500 select-none hidden sm:block font-mono text-sm">instagram.com/</span>
+                                    <input 
+                                        type="text" 
+                                        value={instagram}
+                                        onChange={(e) => setInstagram(e.target.value)}
+                                        className="bg-transparent w-full outline-none text-white p-2 placeholder-neutral-600 font-sans"
+                                        placeholder="usuario"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr className="border-neutral-800" />
+
+                    <div className="flex flex-col gap-3">
+                        <button 
+                            onClick={updateProfile}
+                            disabled={isSaving}
+                            className="w-full bg-orange-600 text-black hover:bg-orange-500 p-4 rounded-none font-black uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70 text-sm"
+                        >
+                            {isSaving ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+                            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                        </button>
+
+                        <button 
+                            onClick={handleLogout}
+                            className="w-full text-red-500 hover:bg-red-950/20 border border-neutral-800 p-4 rounded-none font-bold uppercase tracking-wide text-xs flex items-center justify-center gap-2 transition-colors"
+                        >
+                            <LogOut size={18} /> Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* --- COLUMNA DERECHA: CATÁLOGO --- */}
+        <div className="lg:col-span-2">
+            {/* ... (Igual que antes) ... */}
+            <div className="flex items-center justify-between mb-6 border-b border-neutral-800 pb-4">
+                <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                    <Shirt className="text-orange-600"/> Mi Catálogo
+                </h2>
+                <Link href="/vender" className="bg-white hover:bg-gray-200 text-black px-4 py-2 font-bold uppercase text-xs tracking-wide transition-colors">
+                    + Vender Prenda
+                </Link>
+            </div>
+            {userProducts.length > 0 ? (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <ProductGrid products={userProducts} />
+                </div>
+            ) : (
+                <div className="text-center py-20 border border-dashed border-neutral-800 bg-neutral-900/30">
+                     <div className="flex justify-center mb-4">
+                        <div className="bg-neutral-800 p-4 rounded-full">
+                            <Shirt size={32} className="text-neutral-600" />
+                        </div>
+                    </div>
+                    <p className="text-neutral-500 mb-4 font-mono text-sm">Aún no has subido ninguna prenda.</p>
+                    <Link href="/vender" className="text-orange-600 hover:text-orange-500 font-bold uppercase text-sm border-b border-orange-600 pb-0.5 hover:pb-1 transition-all">
+                        ¡Empieza a vender ahora!
+                    </Link>
+                </div>
+            )}
+        </div>
+
+      </div>
+    </div>
+  )
 }

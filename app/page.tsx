@@ -2,12 +2,15 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 // IMPORTAMOS EL NAVBAR
 import Navbar from '@/app/components/Navbar'; 
-// IMPORTAMOS EL SEARCHBAR (Ahora con diseño Terminal + Lógica)
+// IMPORTAMOS EL SEARCHBAR
 import SearchBar from '@/app/components/SearchBar';
 
-// COMPONENTES DE TU COMPAÑERO
-import ProductGrid from '@/app/components/ProductGrid';
+// COMPONENTES EXISTENTES
 import ImageCarousel from '@/app/components/ImageCarousel';
+import ProductGrid from '@/app/components/ProductGrid';
+
+// NUEVO COMPONENTE (Asegúrate de haber creado el archivo BazaarShowcase.tsx que te pasé antes)
+import BazaarShowcase from '@/app/components/BazaarShowcase'; 
 
 export const dynamic = 'force-dynamic';
 
@@ -15,24 +18,49 @@ export default async function Home() {
   
   const supabase = await createClient();
 
+  // 1. Traemos productos con sus perfiles
   const { data: products, error } = await supabase
     .from('products')
     .select(`
       *,
       profiles (
+        id,
         instagram_handle,
-        full_name
+        full_name,
+        avatar_url
       )
     `)
     .order('created_at', { ascending: false });
 
+  // 2. Lógica para agrupar vendedores (Server-side)
+  const sellersMap = new Map();
+
+  if (products) {
+    products.forEach((product) => {
+      if (product.profiles) {
+        const sellerId = product.profiles.id;
+        
+        if (!sellersMap.has(sellerId)) {
+          sellersMap.set(sellerId, {
+            ...product.profiles, 
+            products: []         
+          });
+        }
+        // Agregamos el producto al inventario de ese vendedor
+        sellersMap.get(sellerId).products.push(product);
+      }
+    });
+  }
+
+  const sellers = Array.from(sellersMap.values());
+
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
 
-      {/* --- HERO SECTION --- */}
+      {/* --- HERO SECTION (RESTAURO EL ORIGINAL EXACTO) --- */}
       <div className="relative border-b border-neutral-800">
         
-        {/* Carrusel de fondo */}
+        {/* Carrusel de fondo: Mantenemos tu clase opacity-200 */}
         <div className="absolute inset-0 opacity-200">
            <ImageCarousel />
         </div>
@@ -52,23 +80,33 @@ export default async function Home() {
               Describe tu vibra. La IA rastrea el inventario de segunda mano por ti.
             </p>
 
-            {/* BARRA DE BÚSQUEDA (Ahora es un componente limpio y funcional) */}
+            {/* BARRA DE BÚSQUEDA */}
             <SearchBar />
             
           </div>
         </div>
       </div>
 
-      {/* --- SECCIÓN DE PRODUCTOS --- */}
-      <div className="max-w-[1400px] mx-auto px-4 py-16">
-        <div className="flex items-end justify-between mb-10 border-b border-neutral-800 pb-4">
-          <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight">
-            Recién <span className="text-neutral-600">Llegados</span>
-          </h2>
-          <span className="font-mono text-orange-600 text-xs uppercase">[Live]</span>
+      {/* --- NUEVA SECCIÓN: BAZARES & VENDEDORES --- */}
+      {/* Reemplazamos "Recién Llegados" por el Showcase de Bazares */}
+      <div className="max-w-[1400px] mx-auto px-4 py-16 space-y-20">
+        
+        {/* Componente de Bazares Destacados */}
+        <BazaarShowcase sellers={sellers} />
+
+        {/* Opcional: Mantenemos el grid completo abajo por si el usuario 
+           quiere seguir viendo "todo" mezclado, pero con un título diferente.
+           Si prefieres quitarlo del todo, borra este bloque div.
+        */}
+        <div>
+           <div className="flex items-end justify-between mb-10 border-b border-neutral-800 pb-4">
+            <h2 className="text-2xl font-bold uppercase tracking-tight text-neutral-400">
+                Explorar <span className="text-white">Todo el Inventario</span>
+            </h2>
+          </div>
+          <ProductGrid products={products} error={error} />
         </div>
 
-        <ProductGrid products={products} error={error} />
       </div>
 
     </div>
