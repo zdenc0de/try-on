@@ -62,23 +62,23 @@ export default async function Home() {
         </div>
 
         {/* Contenido del Hero */}
-        <div className="relative z-10 max-w-[1400px] mx-auto px-4 pt-20 pb-24 md:pt-28 md:pb-32">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-4 pt-12 pb-16 sm:pt-16 sm:pb-20 md:pt-28 md:pb-32">
 
-          <div className="space-y-8">
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.85] uppercase">
+          <div className="space-y-4 sm:space-y-6 md:space-y-8">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.85] uppercase">
               Tu Estilo
               <br />
               <span className="text-neutral-500">Decodificado</span>
               <span className="text-orange-600">.</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-neutral-400 max-w-xl font-mono border-l-2 border-orange-600 pl-4">
+            <p className="text-sm sm:text-lg md:text-xl text-neutral-400 max-w-xl font-mono border-l-2 border-orange-600 pl-4">
               Describe tu vibra. La IA rastrea el inventario de segunda mano por ti.
             </p>
 
             {/* BARRA DE BÚSQUEDA */}
             <SearchBar />
-            
+
           </div>
         </div>
       </div>
