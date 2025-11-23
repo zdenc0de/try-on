@@ -1,29 +1,46 @@
-import { supabase } from '@/lib/supabase';
-import { Terminal, ArrowRight } from 'lucide-react';
-import ProductGrid from './components/ProductGrid';
-import ImageCarousel from './components/ImageCarousel';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+// IMPORTAMOS EL NAVBAR
+import Navbar from '@/app/components/Navbar'; 
+// IMPORTAMOS EL SEARCHBAR (Ahora con diseño Terminal + Lógica)
+import SearchBar from '@/app/components/SearchBar';
+
+// COMPONENTES DE TU COMPAÑERO
+import ProductGrid from '@/app/components/ProductGrid';
+import ImageCarousel from '@/app/components/ImageCarousel';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  
+  const supabase = await createClient();
+
   const { data: products, error } = await supabase
     .from('products')
-    .select('*')
+    .select(`
+      *,
+      profiles (
+        instagram_handle,
+        full_name
+      )
+    `)
     .order('created_at', { ascending: false });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
 
-      {/* HERO SECTION CON CARRUSEL */}
+      {/* --- HERO SECTION --- */}
       <div className="relative border-b border-neutral-800">
+        
         {/* Carrusel de fondo */}
-        <ImageCarousel />
+        <div className="absolute inset-0 opacity-40">
+           <ImageCarousel />
+        </div>
 
         {/* Contenido del Hero */}
         <div className="relative z-10 max-w-[1400px] mx-auto px-4 pt-20 pb-24 md:pt-28 md:pb-32">
 
           <div className="space-y-8">
-            {/* Título Gigante */}
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.85] uppercase">
               Tu Estilo
               <br />
@@ -35,32 +52,14 @@ export default async function Home() {
               Describe tu vibra. La IA rastrea el inventario de segunda mano por ti.
             </p>
 
-            {/* BARRA DE BÚSQUEDA TERMINAL */}
-            <div className="mt-12 max-w-3xl relative group">
-              <div className="absolute -inset-0.5 bg-orange-600 opacity-0 group-hover:opacity-20 group-focus-within:opacity-30 blur transition duration-300"></div>
-
-              <div className="relative flex items-center bg-black border border-neutral-800">
-                <div className="pl-4 pr-2 text-neutral-600">
-                  <Terminal size={20} />
-                </div>
-
-                <input
-                  type="text"
-                  placeholder="Busco outfit para concierto underground..."
-                  className="flex-1 bg-transparent text-white text-base md:text-lg font-mono py-4 px-2 focus:outline-none placeholder:text-neutral-700"
-                />
-
-                <button className="bg-white hover:bg-orange-600 text-black hover:text-white font-bold uppercase text-sm px-6 py-4 transition-colors duration-200 flex items-center gap-2">
-                  Run
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
+            {/* BARRA DE BÚSQUEDA (Ahora es un componente limpio y funcional) */}
+            <SearchBar />
+            
           </div>
         </div>
       </div>
 
-      {/* SECCIÓN DE PRODUCTOS */}
+      {/* --- SECCIÓN DE PRODUCTOS --- */}
       <div className="max-w-[1400px] mx-auto px-4 py-16">
         <div className="flex items-end justify-between mb-10 border-b border-neutral-800 pb-4">
           <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-tight">

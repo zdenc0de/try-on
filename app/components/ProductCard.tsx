@@ -15,7 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group bg-neutral-900 border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-colors duration-200 flex flex-col">
       {/* Imagen */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-neutral-950">
+      <div className="relative aspect-3/4 overflow-hidden bg-neutral-950">
         <img
           src={product.image_url}
           alt={product.title}
