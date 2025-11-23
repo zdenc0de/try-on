@@ -1,16 +1,29 @@
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import { ShoppingBag, PlusCircle, Sparkles } from 'lucide-react';
-import SearchBar from './components/SearchBar'; // <--- IMPORTA EL COMPONENTE AQUÍ
+// IMPORTANTE: Usamos tu cliente de servidor nuevo
+import { createClient } from '@/lib/supabase/server'; 
+import { ShoppingBag, Sparkles } from 'lucide-react';
+// IMPORTANTE: Usamos tu Navbar dinámico
+import NavbarUser from '@/app/components/NavbarUser';
+// IMPORTANTE: Usamos el SearchBar de tu compañero
+import SearchBar from '@/app/components/SearchBar'; 
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   
-  // 1. OBTENER PRODUCTOS DE SUPABASE
+  // 1. INICIALIZAR SUPABASE (SERVER) - Tu lógica
+  const supabase = await createClient();
+
+  // 2. OBTENER PRODUCTOS + DATOS DEL VENDEDOR - Tu lógica (necesaria para que no falle)
   const { data: products, error } = await supabase
     .from('products')
-    .select('*')
+    .select(`
+      *,
+      profiles (
+        instagram_handle,
+        full_name
+      )
+    `)
     .order('created_at', { ascending: false });
 
   return (
@@ -19,42 +32,41 @@ export default async function Home() {
       {/* --- NAVBAR --- */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-black text-white p-2 rounded-lg">
+          
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="bg-black text-white p-2 rounded-lg group-hover:bg-purple-600 transition-colors duration-300">
               <Sparkles size={20} />
             </div>
             <span className="text-xl font-bold tracking-tight">ReVibe AI</span>
+          </Link>
+
+          {/* Navbar Dinámico (Tu cambio) */}
+          <div>
+            <NavbarUser />
           </div>
 
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/vender" 
-              className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-full font-medium hover:bg-gray-800 transition-colors text-sm"
-            >
-              <PlusCircle size={16} />
-              Vender Ropa
-            </Link>
-          </div>
         </div>
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 py-12">
         
         {/* --- HERO SECTION --- */}
-        <div className="text-center mb-16 space-y-6">
+        <div className="text-center mb-16 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900">
             Tu estilo, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">decodificado.</span>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            No busques por palabras clave. Describe tu plan, tu vibra o sube una foto, y nuestra IA encontrará el outfit perfecto de segunda mano.
+            No busques por palabras clave. Describe tu plan, tu vibra o sube una foto, y nuestra IA encontrará el outfit perfecto.
           </p>
 
-          {/* AQUÍ ESTÁ EL NUEVO COMPONENTE */}
-          <SearchBar /> 
-
+          {/* SearchBar del compañero */}
+          <div className="max-w-2xl mx-auto relative group">
+             <SearchBar /> 
+          </div>
         </div>
 
-        {/* --- RESULTADOS / FEED --- */}
+        {/* --- RESULTADOS --- */}
         <div>
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <ShoppingBag size={24} />
@@ -76,6 +88,8 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products?.map((product) => (
               <div key={product.id} className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
+                
+                {/* Imagen */}
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
                   <img 
                     src={product.image_url} 
@@ -87,9 +101,18 @@ export default async function Home() {
                   </div>
                 </div>
 
+                {/* Info */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-bold text-gray-900 truncate">{product.title}</h3>
+                    
+                    {/* MOSTRAR VENDEDOR (Tu cambio) */}
+                    {product.profiles && (
+                      <div className="text-xs text-purple-600 font-medium mb-1">
+                        @{product.profiles.instagram_handle || 'vendedor'}
+                      </div>
+                    )}
+
                     <p className="text-sm text-gray-500 line-clamp-2 mt-1">{product.description}</p>
                   </div>
                   
