@@ -21,10 +21,10 @@ export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
         {/* Link a directorio (próximamente) */}
       </div>
 
-      {/* Grid de Bazares */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Grid horizontal de Bazares */}
+      <div className="flex gap-6 overflow-x-auto pb-4">
         {sellers.map((seller) => (
-          <div key={seller.id} className="group bg-neutral-900/50 border border-neutral-800 hover:border-orange-600/50 transition-all duration-300 flex flex-col h-full">
+          <div key={seller.id} className="group bg-neutral-900/50 border border-neutral-800 hover:border-orange-600/50 transition-all duration-300 flex flex-col w-[280px] md:w-[320px] lg:w-[380px] flex-shrink-0">
             
             {/* Header del Vendedor */}
             <div className="p-6 flex items-start justify-between">
