@@ -1,118 +1,114 @@
 'use server'
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { supabase } from "@/lib/supabase"; // Asegúrate de que esta ruta sea correcta en tu proyecto
+import { supabase } from "@/lib/supabase";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function searchProductsWithGemini(userQuery) {
-  console.log(`🤖 Gemini: Interpretando búsqueda: "${userQuery}"`);
+  // console.log(`🤖 Gemini: Interpretando búsqueda: "${userQuery}"`);
 
   try {
-    // 1. Configurar el modelo
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // 2. EL PROMPT DE TRADUCCIÓN (User Query -> DB Filters)
-    // Le damos contexto de qué campos existen en tu base de datos gracias a analyze-image.js
+    // 1. PROMPT DE TRADUCCIÓN (Optimizado y seguro)
     const prompt = `
-      Eres un traductor de intención de búsqueda para un eCommerce de ropa de segunda mano.
-      Tu objetivo es convertir la frase del usuario en filtros estructurados para consultar una base de datos.
-      
-      Campos disponibles en la base de datos (basado en el análisis previo de prendas):
-      - category (Strings comunes: "Chamarras", "Pantalones", "Vestidos", "Camisas", "Calzado", "Accesorios")
-      - color (String)
-      - price (Number)
-      - tags (Array de strings)
-      - description (String)
+      Eres un motor de búsqueda para ropa de segunda mano.
+      Tu trabajo es limpiar la consulta del usuario para filtrar una base de datos.
+
+      INSTRUCCIONES:
+      1. Category: Clasifica en una de estas: "Chamarras", "Pantalones", "Vestidos", "Camisas", "Calzado", "Accesorios".
+         - Si busca "tenis", "botas" -> category: "Calzado".
+         - Si busca "jeans", "shorts" -> category: "Pantalones".
+         - Si es ambiguo -> null.
+      2. Price: "barato"=maxPrice:300. "menos de X"=maxPrice:X.
+      3. Color: Extrae el color principal (ej: "rojo").
+      4. SearchTerms: Extrae las palabras clave CLAVE separadas por espacios.
+         - Elimina palabras basura ("de", "para", "con", "quiero", "busco").
+         - Deja solo sustantivos y adjetivos.
+         - Ejemplo: "quiero un vestido rojo para la boda" -> "vestido rojo boda"
 
       Usuario busca: "${userQuery}"
 
-      Instrucciones:
-      1. Analiza la intención. Si pide "barato", define un maxPrice razonable (ej: 300).
-      2. Si menciona un evento (ej: "boda", "fiesta"), añade keywords en 'searchTerms'.
-      3. Devuelve SOLO JSON válido.
-
-      Estructura JSON requerida (puedes omitir campos si no aplican):
+      Devuelve SOLO JSON puro:
       {
-        "category": "String exacto o null",
+        "category": "String o null",
         "color": "String o null",
         "minPrice": Number o null,
         "maxPrice": Number o null,
-        "searchTerms": "String con palabras clave para buscar en titulo/descripcion (ej: 'boda elegante')"
+        "searchTerms": "String"
       }
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let text = response.text();
-
-    // Limpieza del JSON
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    // Limpieza segura del JSON
+    let text = response.text().replace(/```json|```/g, "").trim();
     const filters = JSON.parse(text);
 
-    console.log("🔍 Filtros generados por IA:", filters);
+    console.log("🔍 Filtros IA:", filters);
 
-    // 3. CONSTRUIR LA QUERY A SUPABASE
-    // Empezamos seleccionando todo
+    // 2. CONSTRUCCIÓN DE LA QUERY (Lógica JS optimizada)
     let query = supabase.from('products').select('*');
 
-    // Aplicamos filtros dinámicamente según lo que Gemini entendió
+    // A) FILTROS RÁPIDOS (Reducen la búsqueda drásticamente)
+    // Al filtrar primero por precio o categoría, la búsqueda de texto se hace sobre menos datos = Más velocidad.
     
-    // A) Filtro por Categoría (si Gemini detectó una clara)
     if (filters.category) {
-      // Usamos ilike para que no importen mayúsculas/minúsculas
-      query = query.ilike('category', `%${filters.category}%`);
+      query = query.eq('category', filters.category);
     }
 
-    // B) Filtro por Color
-    if (filters.color) {
-      query = query.ilike('color', `%${filters.color}%`);
-    }
+    if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
+    if (filters.minPrice) query = query.gte('price', filters.minPrice);
+    if (filters.color) query = query.ilike('color', `%${filters.color}%`);
 
-    // C) Filtro de Precios
-    if (filters.maxPrice) {
-      query = query.lte('price', filters.maxPrice); // Menor o igual a
-    }
-    if (filters.minPrice) {
-      query = query.gte('price', filters.minPrice); // Mayor o igual a
-    }
-
-    // D) Búsqueda de Texto (Keywords en título, descripción o tags)
-    // Esto busca si los términos están en el título O en la descripción
+    // B) BÚSQUEDA DE TEXTO "AMPLIA" (El truco para todas las coincidencias)
     if (filters.searchTerms) {
-      // Nota: Para búsquedas complejas de texto, Supabase recomienda "Text Search",
-      // pero para empezar, un 'ilike' combinando columnas funciona bien.
-      // Aquí buscamos que el término esté en el título O en la descripción.
-      const term = filters.searchTerms;
-      query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+      // 1. Rompemos la frase en palabras individuales
+      const terms = filters.searchTerms.split(" ").filter(w => w.length > 2); // Ignoramos palabras de 1 o 2 letras
+
+      if (terms.length > 0) {
+        // 2. Construimos una cadena OR gigante.
+        // Supabase .or() funciona así: "columna.operador.valor, columna.operador.valor"
+        // Si separamos por comas, significa O.
+        
+        // Queremos: (title tiene Palabra1) O (desc tiene Palabra1) O (title tiene Palabra2)...
+        const orString = terms.map(term => {
+            return `title.ilike.%${term}%,description.ilike.%${term}%`;
+        }).join(',');
+
+        // Esto le dice a Supabase: "Dame el producto si CUALQUIERA de estas condiciones se cumple"
+        query = query.or(orString);
+      }
     }
 
-    // Ejecutamos la consulta
     const { data, error } = await query;
 
     if (error) throw error;
 
-    return { 
-      success: true, 
-      data: data, 
-      aiFilters: filters // Devolvemos los filtros para mostrarle al usuario qué entendió la IA
-    };
+    return { success: true, data: data, aiFilters: filters };
 
   } catch (error) {
-    console.error("❌ Error en búsqueda inteligente:", error);
-    // Fallback: Si falla la IA, hacemos una búsqueda simple de texto en Supabase
+    console.error("❌ Error Gemini/Supabase:", error);
+    // Fallback tradicional por si falla la IA
     return searchFallback(userQuery);
   }
 }
 
-// Función de respaldo por si Gemini falla o tarda mucho
 async function searchFallback(term) {
-  console.log("⚠️ Usando búsqueda tradicional (Fallback)");
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+  // Fallback mejorado: Rompe la frase y busca cualquier coincidencia
+  const words = term.split(" ").filter(w => w.length > 3);
+  let query = supabase.from('products').select('*');
   
+  if (words.length > 0) {
+      const searchString = words.map(w => `title.ilike.%${w}%,description.ilike.%${w}%`).join(',');
+      query = query.or(searchString);
+  } else {
+      query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+  }
+  
+  const { data, error } = await query;
   if (error) return { success: false, error: error.message };
   return { success: true, data: data, isFallback: true };
 }
