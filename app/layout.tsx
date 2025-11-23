@@ -25,13 +25,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-white min-h-screen`}
       >
         <Navbar />
         <main>{children}</main>
-        <Toaster position="top-center" richColors />
+        <Toaster position="bottom-right" theme="dark" richColors />
       </body>
     </html>
   );
