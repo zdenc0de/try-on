@@ -1,18 +1,19 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client' // <--- OJO AL IMPORT
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Lock, Mail, Loader2 } from 'lucide-react'
+import { Loader2, Mail } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient() // Instancia del cliente
-  
+  const supabase = createClient()
+
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,22 +22,18 @@ export default function LoginPage() {
     try {
       if (isSignUp) {
         // --- REGISTRO ---
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            // Esto activa tu Trigger SQL para crear el perfil
-            data: { full_name: fullName } 
+            data: { full_name: fullName },
+            emailRedirectTo: `${window.location.origin}/auth/callback`
           }
         })
         if (error) throw error
-        
-        // Si entra directo (Confirm Email desactivado)
-        if (data.session) {
-          router.push('/perfil') 
-        } else {
-           alert('Cuenta creada. Si no entraste automático, revisa la config de Supabase.')
-        }
+
+        // Mostrar mensaje de verificación
+        setEmailSent(true)
 
       } else {
         // --- LOGIN ---
@@ -45,14 +42,50 @@ export default function LoginPage() {
           password
         })
         if (error) throw error
-        
-        router.push('/') // Al home
+
+        router.push('/')
       }
     } catch (error: any) {
       alert(error.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Pantalla de email enviado
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black p-4">
+        <div className="bg-neutral-950 p-8 w-full max-w-md border border-neutral-800 text-center">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-orange-600 mx-auto flex items-center justify-center">
+              <Mail size={32} className="text-black" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-white mb-4">
+            Verifica tu correo
+          </h1>
+          <p className="text-neutral-400 font-mono text-sm mb-6">
+            Enviamos un enlace de confirmación a:
+          </p>
+          <p className="text-orange-500 font-bold mb-6 break-all">
+            {email}
+          </p>
+          <p className="text-neutral-500 font-mono text-xs mb-8">
+            Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.
+          </p>
+          <button
+            onClick={() => {
+              setEmailSent(false)
+              setIsSignUp(false)
+            }}
+            className="text-sm text-neutral-500 hover:text-orange-600 transition-colors font-mono"
+          >
+            ← Volver al inicio de sesión
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
