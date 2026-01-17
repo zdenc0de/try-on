@@ -6,8 +6,21 @@ import { Instagram, Save, LogOut, User, Sparkles, ArrowLeft, Loader2, Shirt, Cam
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { updateAvatar } from '@/app/actions/update-avatar'
-// IMPORTAMOS TU GRID DE PRODUCTOS
 import ProductGrid from '@/app/components/ProductGrid'
+import type { Session } from '@supabase/supabase-js'
+
+interface Product {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image_url: string;
+  tags?: string[];
+  profiles?: {
+    instagram_handle: string | null;
+    full_name: string | null;
+  };
+}
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -15,9 +28,8 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState<any>(null)
-  // Estado para el catálogo
-  const [userProducts, setUserProducts] = useState<any[]>([])
+  const [session, setSession] = useState<Session | null>(null)
+  const [userProducts, setUserProducts] = useState<Product[]>([])
 
   const [instagram, setInstagram] = useState('')
   const [fullName, setFullName] = useState('')
@@ -68,6 +80,8 @@ export default function ProfilePage() {
   }, [])
 
   const updateProfile = async () => {
+    if (!session) return
+
     setIsSaving(true)
     try {
       const cleanInsta = instagram
@@ -78,7 +92,7 @@ export default function ProfilePage() {
 
       const { error } = await supabase
         .from('profiles')
-        .update({ 
+        .update({
           instagram_handle: cleanInsta,
           full_name: fullName,
           updated_at: new Date()
@@ -172,7 +186,7 @@ export default function ProfilePage() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                           ) : (
-                            fullName ? fullName[0].toUpperCase() : session?.user?.email[0].toUpperCase()
+                            fullName ? fullName[0].toUpperCase() : (session?.user?.email?.[0]?.toUpperCase() || '?')
                           )}
 
                           {/* Overlay en hover */}

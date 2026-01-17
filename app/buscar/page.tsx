@@ -47,7 +47,7 @@ export default async function SearchPage({
           </div>
 
           <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
-            Resultados para <span className="text-orange-600">"{query}"</span>
+            Resultados para <span className="text-orange-600">&ldquo;{query}&rdquo;</span>
           </h1>
 
           {/* Mostramos el razonamiento de la IA (Factor WOW) */}

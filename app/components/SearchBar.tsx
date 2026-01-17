@@ -1,25 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Terminal, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function SearchBar() {
   const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Reset loading cuando cambian los searchParams (navegación completada)
-  useEffect(() => {
-    setIsLoading(false);
-  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      setIsLoading(true);
-      router.push(`/buscar?q=${encodeURIComponent(query)}`);
+      startTransition(() => {
+        router.push(`/buscar?q=${encodeURIComponent(query)}`);
+      });
     }
   };
 
@@ -49,10 +44,10 @@ export default function SearchBar() {
         {/* Botón RUN */}
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isPending}
           className="bg-white hover:bg-orange-600 text-black hover:text-white font-bold uppercase text-xs sm:text-sm px-4 sm:px-6 py-3 sm:py-4 transition-colors duration-200 flex items-center gap-1 sm:gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {isLoading ? (
+          {isPending ? (
             <>
               <Loader2 size={16} className="animate-spin" />
               Buscando...

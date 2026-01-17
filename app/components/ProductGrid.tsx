@@ -29,7 +29,7 @@ export default function ProductGrid({ products, error }: ProductGridProps) {
       {products && products.length === 0 && (
         <div className="text-center py-20 border border-dashed border-neutral-800">
           <p className="text-neutral-500 font-mono text-sm uppercase">
-            // No hay productos
+            No hay productos
           </p>
           <Link
             href="/vender"

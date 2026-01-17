@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client'; 
-import { User, PlusCircle, LogIn, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { User as UserIcon, PlusCircle, LogIn, Loader2 } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -64,7 +65,7 @@ export default function Navbar() {
               </Link>
 
               <Link href="/perfil" className={secondaryButtonStyle}>
-                <User size={14} />
+                <UserIcon size={14} />
                 Mi Perfil
               </Link>
             </div>

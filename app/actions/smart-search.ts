@@ -14,7 +14,7 @@ export async function searchProducts(userQuery: string) {
     // PASO 1: Expandir búsqueda con Gemini
     console.log("🤖 Consultando a Gemini...");
     
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
     const prompt = `Eres un experto en moda. El usuario busca: "${userQuery}"
 

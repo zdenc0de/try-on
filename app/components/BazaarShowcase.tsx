@@ -1,8 +1,21 @@
 import Link from 'next/link';
 import { Instagram, Shirt } from 'lucide-react';
 
+interface Product {
+  id: string;
+  image_url: string;
+}
+
+interface Seller {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  instagram_handle: string | null;
+  products: Product[];
+}
+
 interface BazaarShowcaseProps {
-  sellers: any[]; // Recibimos la lista de vendedores procesada
+  sellers: Seller[];
 }
 
 export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
@@ -32,7 +45,7 @@ export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
                 {/* Avatar */}
                 <div className="w-16 h-16 bg-black border-2 border-neutral-800 rounded-full overflow-hidden flex items-center justify-center relative group-hover:border-orange-600 transition-colors">
                   {seller.avatar_url ? (
-                    <img src={seller.avatar_url} alt={seller.full_name} className="w-full h-full object-cover" />
+                    <img src={seller.avatar_url} alt={seller.full_name || 'Avatar'} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-2xl font-black text-neutral-700 uppercase">
                       {seller.full_name?.[0] || '?'}
@@ -63,7 +76,7 @@ export default function BazaarShowcase({ sellers }: BazaarShowcaseProps) {
             <div className="px-6 pb-6 flex-1">
               <div className="bg-black border border-neutral-800 p-2 grid grid-cols-3 gap-2">
                 {seller.products && seller.products.length > 0 ? (
-                  seller.products.slice(0, 3).map((prod: any) => (
+                  seller.products.slice(0, 3).map((prod) => (
                     <Link key={prod.id} href={`/producto/${prod.id}`} className="block relative aspect-square bg-neutral-900 overflow-hidden group/item">
                        <img 
                         src={prod.image_url} 

@@ -5,9 +5,18 @@ import { enrichProductTags } from '@/app/actions/enrich-tags'
 import { Loader2, Sparkles, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
+interface EnrichResult {
+  success: boolean;
+  error?: string;
+  message?: string;
+  processed?: number;
+  errors?: number;
+  total?: number;
+}
+
 export default function EnrichPage() {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<EnrichResult | null>(null)
 
   const handleEnrich = async () => {
     setLoading(true)
@@ -16,8 +25,9 @@ export default function EnrichPage() {
     try {
       const res = await enrichProductTags()
       setResult(res)
-    } catch (err: any) {
-      setResult({ success: false, error: err.message })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error desconocido'
+      setResult({ success: false, error: message })
     }
 
     setLoading(false)
