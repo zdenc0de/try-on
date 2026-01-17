@@ -1,24 +1,44 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { searchProducts } from '@/app/actions/smart-search';
+import { searchProducts, SearchFilters } from '@/app/actions/smart-search';
 import ProductGrid from '@/app/components/ProductGrid';
 import SearchBar from '@/app/components/SearchBar';
-import {Frown, ArrowLeft, Target, Link2 } from 'lucide-react';
+import SearchFiltersComponent from '@/app/components/SearchFilters';
+import { Frown, ArrowLeft, Target, Link2, SlidersHorizontal, Loader2 } from 'lucide-react';
+
+interface SearchParams {
+  q?: string;
+  subcategory?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  sortBy?: string;
+}
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>; // ✅ FIX: Ahora es Promise
+  searchParams: Promise<SearchParams>;
 }) {
-  // ✅ FIX: Desempaquetar la Promise
   const params = await searchParams;
   const query = params.q || '';
-  
+
+  // Construir objeto de filtros desde URL
+  const filters: SearchFilters = {
+    subcategory: params.subcategory || undefined,
+    minPrice: params.minPrice ? parseFloat(params.minPrice) : undefined,
+    maxPrice: params.maxPrice ? parseFloat(params.maxPrice) : undefined,
+    sortBy: (params.sortBy as SearchFilters['sortBy']) || 'relevance',
+  };
+
+  // Verificar si hay filtros activos
+  const hasActiveFilters = !!(filters.subcategory || filters.minPrice || filters.maxPrice || (filters.sortBy && filters.sortBy !== 'relevance'));
+
   let products = [];
   let aiTags: { direct: string[], related: string[] } = { direct: [], related: [] };
   let success = false;
 
   if (query) {
-    const result = await searchProducts(query);
+    const result = await searchProducts(query, filters);
     products = result.products || [];
     aiTags = result.aiTags || { direct: [], related: [] };
     success = result.success || false;
@@ -46,9 +66,32 @@ export default async function SearchPage({
             </div>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
-            Resultados para <span className="text-orange-600">&ldquo;{query}&rdquo;</span>
-          </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight">
+              Resultados para <span className="text-orange-600">&ldquo;{query}&rdquo;</span>
+            </h1>
+
+            {/* Componente de filtros */}
+            <Suspense fallback={<div className="h-10 w-28 bg-neutral-800 animate-pulse" />}>
+              <SearchFiltersComponent />
+            </Suspense>
+          </div>
+
+          {/* Indicador de filtros activos */}
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2 text-sm text-neutral-500 mb-4">
+              <SlidersHorizontal size={14} />
+              <span>Filtros aplicados</span>
+              {filters.subcategory && (
+                <span className="text-orange-500">• {filters.subcategory}</span>
+              )}
+              {(filters.minPrice || filters.maxPrice) && (
+                <span className="text-orange-500">
+                  • ${filters.minPrice || 0} - ${filters.maxPrice || '∞'}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Mostramos el razonamiento de la IA (Factor WOW) */}
           {success && (aiTags.direct.length > 0 || aiTags.related.length > 0) && (
