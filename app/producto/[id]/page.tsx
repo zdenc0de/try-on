@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Instagram, Tag } from 'lucide-react';
+import ProductGallery from '@/app/components/ProductGallery';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -47,15 +48,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
-          {/* Imagen del Producto */}
-          <div className="relative aspect-[3/4] bg-neutral-900 border border-neutral-800 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={product.image_url}
-              alt={product.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          {/* Galería de Imágenes */}
+          <ProductGallery
+            images={product.images && product.images.length > 0 ? product.images : [product.image_url]}
+            title={product.title}
+          />
 
           {/* Detalles del Producto */}
           <div className="space-y-6">

@@ -18,39 +18,51 @@ export async function saveProduct(formData: FormData): Promise<SaveProductRespon
     return { success: false, error: "Debes iniciar sesión para vender." };
   }
 
-  const imageFile = formData.get('image') as File | null;
+  // Obtener todas las imágenes del FormData
+  const imageFiles = formData.getAll('images') as File[];
   const title = formData.get('title') as string | null;
   const description = formData.get('description') as string | null;
   const price = formData.get('price') as string | null;
   const category = formData.get('category') as string | null;
   const tagsString = formData.get('tags') as string | null;
 
-  console.log("[Save] Datos recibidos:", { title, description, price, category, tags: tagsString });
+  console.log("[Save] Datos recibidos:", { title, description, price, category, tags: tagsString, numImages: imageFiles.length });
 
-  if (!imageFile || !title) {
-    return { success: false, error: "Faltan datos obligatorios" };
+  if (!imageFiles || imageFiles.length === 0 || !title) {
+    return { success: false, error: "Faltan datos obligatorios (imagen y título)" };
   }
 
   try {
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    // Subir todas las imágenes EN PARALELO para mayor velocidad
+    console.log(`[Save] Subiendo ${imageFiles.length} imágenes en paralelo...`);
 
-    console.log("[Save] Subiendo imagen:", fileName);
+    const uploadPromises = imageFiles.map(async (imageFile, i) => {
+      const fileExt = imageFile.name.split('.').pop() || 'jpg';
+      const fileName = `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('products')
-      .upload(fileName, imageFile);
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(fileName, imageFile);
 
-    if (uploadError) {
-      console.error("[Error] Upload:", uploadError);
-      return { success: false, error: "Error subiendo la imagen: " + uploadError.message };
-    }
+      if (uploadError) {
+        throw new Error(`Error subiendo imagen ${i + 1}: ${uploadError.message}`);
+      }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('products')
-      .getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(fileName);
 
-    console.log("[Save] Imagen subida:", publicUrl);
+      console.log(`[Save] Imagen ${i + 1} subida:`, publicUrl);
+      return { index: i, url: publicUrl };
+    });
+
+    const results = await Promise.all(uploadPromises);
+
+    // Ordenar por índice original para mantener el orden
+    results.sort((a, b) => a.index - b.index);
+    const uploadedUrls = results.map(r => r.url);
+
+    console.log(`[Save] Todas las imágenes subidas:`, uploadedUrls.length);
 
     const tagsArray = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : [];
 
@@ -60,11 +72,12 @@ export async function saveProduct(formData: FormData): Promise<SaveProductRespon
       price: parseFloat(price || '0') || 0,
       category,
       tags: tagsArray,
-      image_url: publicUrl,
+      image_url: uploadedUrls[0], // Primera imagen como principal (compatibilidad)
+      images: uploadedUrls,        // Todas las imágenes
       user_id: user.id
     };
 
-    console.log("[Save] Insertando en DB:", productData);
+    console.log("[Save] Insertando en DB:", { ...productData, images: `[${uploadedUrls.length} imágenes]` });
 
     const { error: dbError } = await supabase
       .from('products')
@@ -75,7 +88,7 @@ export async function saveProduct(formData: FormData): Promise<SaveProductRespon
       return { success: false, error: dbError.message || "Error guardando en base de datos" };
     }
 
-    console.log("[Save] Producto guardado exitosamente");
+    console.log("[Save] Producto guardado exitosamente con", uploadedUrls.length, "imágenes");
 
     revalidatePath('/');
     revalidatePath('/perfil');
