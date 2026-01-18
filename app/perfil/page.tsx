@@ -6,7 +6,7 @@ import { Instagram, Save, LogOut, User, Sparkles, ArrowLeft, Loader2, Shirt, Cam
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { updateAvatar } from '@/app/actions/update-avatar'
-import ProductGrid from '@/app/components/ProductGrid'
+import EditableProductGrid from '@/app/components/EditableProductGrid'
 import type { Session } from '@supabase/supabase-js'
 
 interface Product {
@@ -37,11 +37,25 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
+  // Función para cargar productos
+  const loadProducts = async (userId: string) => {
+    const { data: products } = await supabase
+      .from('products')
+      .select(`
+        *,
+        profiles ( instagram_handle, full_name )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (products) setUserProducts(products)
+  }
+
   useEffect(() => {
     const getData = async () => {
       // 1. Sesión
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       if (!session) {
         router.push('/login')
         return
@@ -62,16 +76,7 @@ export default function ProfilePage() {
       }
 
       // 3. Catálogo (Tus productos)
-      const { data: products } = await supabase
-        .from('products')
-        .select(`
-          *,
-          profiles ( instagram_handle, full_name )
-        `)
-        .eq('user_id', session.user.id) // Filtramos por TU id
-        .order('created_at', { ascending: false })
-
-      if (products) setUserProducts(products)
+      await loadProducts(session.user.id)
 
       setLoading(false)
     }
@@ -282,8 +287,21 @@ export default function ProfilePage() {
 
             {userProducts.length > 0 ? (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* Usamos el grid existente pero asegúrate que los estilos coincidan */}
-                    <ProductGrid products={userProducts} />
+                    <EditableProductGrid
+                      products={userProducts}
+                      onProductDeleted={() => {
+                        // Recargar productos desde la base de datos
+                        if (session?.user?.id) {
+                          loadProducts(session.user.id);
+                        }
+                      }}
+                      onProductUpdated={() => {
+                        // Recargar productos desde la base de datos
+                        if (session?.user?.id) {
+                          loadProducts(session.user.id);
+                        }
+                      }}
+                    />
                 </div>
             ) : (
                 <div className="text-center py-20 border border-dashed border-neutral-800 bg-neutral-900/30">
