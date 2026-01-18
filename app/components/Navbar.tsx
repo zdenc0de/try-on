@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { User as UserIcon, PlusCircle, LogIn, Loader2 } from 'lucide-react';
+import { User as UserIcon, PlusCircle, LogIn, Loader2, Heart } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 
 export default function Navbar() {
@@ -62,6 +62,14 @@ export default function Navbar() {
               <Link href="/vender" className={primaryButtonStyle}>
                 <PlusCircle size={14} />
                 Vender
+              </Link>
+
+              <Link
+                href="/favoritos"
+                className={`${buttonBaseStyle} text-neutral-400 hover:text-red-500 transition-colors`}
+                title="Mis Favoritos"
+              >
+                <Heart size={18} />
               </Link>
 
               <Link href="/perfil" className={secondaryButtonStyle}>

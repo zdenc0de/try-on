@@ -15,9 +15,15 @@ interface Product {
 
 interface PaginatedProductGridProps {
   products: Product[] | null;
+  favoriteIds?: string[];
+  isAuthenticated?: boolean;
 }
 
-export default function PaginatedProductGrid({ products }: PaginatedProductGridProps) {
+export default function PaginatedProductGrid({
+  products,
+  favoriteIds = [],
+  isAuthenticated = false,
+}: PaginatedProductGridProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12; // 3 filas x 4 columnas
 
@@ -49,7 +55,12 @@ export default function PaginatedProductGrid({ products }: PaginatedProductGridP
       {/* Grid 4 columnas (3 filas visibles) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {currentProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            isFavorite={favoriteIds.includes(product.id)}
+            isAuthenticated={isAuthenticated}
+          />
         ))}
       </div>
 

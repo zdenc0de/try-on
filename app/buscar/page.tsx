@@ -1,10 +1,12 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { searchProducts, SearchFilters } from '@/app/actions/smart-search';
+import { getUserFavoriteIds } from '@/app/actions/favorites';
+import { createClient } from '@/lib/supabase/server';
 import ProductGrid from '@/app/components/ProductGrid';
 import SearchBar from '@/app/components/SearchBar';
 import SearchFiltersComponent from '@/app/components/SearchFilters';
-import { Frown, ArrowLeft, Target, Link2, SlidersHorizontal, Loader2 } from 'lucide-react';
+import { Frown, ArrowLeft, Target, Link2, SlidersHorizontal } from 'lucide-react';
 
 interface SearchParams {
   q?: string;
@@ -21,6 +23,11 @@ export default async function SearchPage({
 }) {
   const params = await searchParams;
   const query = params.q || '';
+
+  // Obtener usuario autenticado y favoritos
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const favoriteIds = await getUserFavoriteIds();
 
   // Construir objeto de filtros desde URL
   const filters: SearchFilters = {
@@ -149,7 +156,11 @@ export default async function SearchPage({
             <p className="text-neutral-500 text-sm mb-6">
               {products.length} {products.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
             </p>
-            <ProductGrid products={products} />
+            <ProductGrid
+              products={products}
+              favoriteIds={favoriteIds}
+              isAuthenticated={!!user}
+            />
           </div>
         ) : (
           <div className="py-20 text-center border border-dashed border-neutral-800 rounded-2xl bg-neutral-900/20">

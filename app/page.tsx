@@ -1,18 +1,23 @@
 import { createClient } from '@/lib/supabase/server';
 import SearchBar from '@/app/components/SearchBar';
+import { getUserFavoriteIds } from '@/app/actions/favorites';
 
 // COMPONENTES EXISTENTES
 import ImageCarousel from '@/app/components/ImageCarousel';
 import PaginatedProductGrid from '@/app/components/PaginatedProductGrid';
 
 // NUEVO COMPONENTE (Asegúrate de haber creado el archivo BazaarShowcase.tsx que te pasé antes)
-import BazaarShowcase from '@/app/components/BazaarShowcase'; 
+import BazaarShowcase from '@/app/components/BazaarShowcase';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  
+
   const supabase = await createClient();
+
+  // Obtener usuario autenticado y favoritos
+  const { data: { user } } = await supabase.auth.getUser();
+  const favoriteIds = await getUserFavoriteIds();
 
   // 1. Traemos productos con sus perfiles
   const { data: products} = await supabase
@@ -100,7 +105,11 @@ export default async function Home() {
                 Explorar <span className="text-white">Todo el Inventario</span>
             </h2>
           </div>
-          <PaginatedProductGrid products={products} />
+          <PaginatedProductGrid
+            products={products}
+            favoriteIds={favoriteIds}
+            isAuthenticated={!!user}
+          />
         </div>
 
       </div>

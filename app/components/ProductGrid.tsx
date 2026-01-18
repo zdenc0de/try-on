@@ -13,9 +13,18 @@ interface Product {
 interface ProductGridProps {
   products: Product[] | null;
   error?: { message: string } | null;
+  favoriteIds?: string[];
+  isAuthenticated?: boolean;
+  showFavoriteButton?: boolean;
 }
 
-export default function ProductGrid({ products, error }: ProductGridProps) {
+export default function ProductGrid({
+  products,
+  error,
+  favoriteIds = [],
+  isAuthenticated = false,
+  showFavoriteButton = true,
+}: ProductGridProps) {
   return (
     <div>
       {/* Estado de Error */}
@@ -43,7 +52,13 @@ export default function ProductGrid({ products, error }: ProductGridProps) {
       {/* Grid de Productos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {products?.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            isFavorite={favoriteIds.includes(product.id)}
+            isAuthenticated={isAuthenticated}
+            showFavoriteButton={showFavoriteButton}
+          />
         ))}
       </div>
     </div>
