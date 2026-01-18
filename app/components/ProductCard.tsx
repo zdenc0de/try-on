@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import FavoriteButton from './FavoriteButton';
+import ShareButton from './ShareButton';
 
 interface Product {
   id: string;
@@ -15,6 +16,7 @@ interface ProductCardProps {
   isFavorite?: boolean;
   isAuthenticated?: boolean;
   showFavoriteButton?: boolean;
+  showShareButton?: boolean;
 }
 
 export default function ProductCard({
@@ -22,12 +24,22 @@ export default function ProductCard({
   isFavorite = false,
   isAuthenticated = false,
   showFavoriteButton = true,
+  showShareButton = true,
 }: ProductCardProps) {
   return (
     <div className="relative group">
-      {/* Botón de favorito */}
-      {showFavoriteButton && (
-        <div className="absolute top-2 right-2 z-10">
+      {/* Botones de acción */}
+      <div className="absolute top-2 right-2 z-10 flex gap-1">
+        {showShareButton && (
+          <ShareButton
+            productId={product.id}
+            title={product.title}
+            price={product.price}
+            variant="icon"
+            className="bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70"
+          />
+        )}
+        {showFavoriteButton && (
           <FavoriteButton
             productId={product.id}
             initialIsFavorite={isFavorite}
@@ -35,8 +47,8 @@ export default function ProductCard({
             size="md"
             className="bg-black/50 backdrop-blur-sm rounded-full hover:bg-black/70"
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <Link href={`/producto/${product.id}`}>
         <div className="bg-neutral-900 border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-colors duration-200 flex flex-col cursor-pointer">

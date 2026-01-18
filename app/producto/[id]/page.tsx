@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Instagram, Tag } from 'lucide-react';
 import ProductGallery from '@/app/components/ProductGallery';
+import ShareButton from '@/app/components/ShareButton';
+import { headers } from 'next/headers';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -11,6 +13,12 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
   const supabase = await createClient();
+
+  // Obtener URL base para compartir
+  const headersList = await headers();
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const productUrl = `${protocol}://${host}/producto/${id}`;
 
   // Obtener producto con perfil del vendedor
   const { data: product, error } = await supabase
@@ -152,17 +160,33 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
             )}
 
-            {/* Botón de Contacto */}
-            {product.profiles?.instagram_handle && (
-              <a
-                href={`https://instagram.com/${product.profiles.instagram_handle}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-white hover:bg-orange-600 text-black hover:text-white text-center font-bold uppercase text-sm py-4 transition-colors duration-200"
-              >
-                Contactar por Instagram
-              </a>
-            )}
+            {/* Botones de Acción */}
+            <div className="space-y-3">
+              {product.profiles?.instagram_handle && (
+                <a
+                  href={`https://instagram.com/${product.profiles.instagram_handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-white hover:bg-orange-600 text-black hover:text-white text-center font-bold uppercase text-sm py-4 transition-colors duration-200"
+                >
+                  Contactar por Instagram
+                </a>
+              )}
+
+              {/* Botón de Compartir */}
+              <div className="border-t border-neutral-800 pt-4">
+                <h3 className="font-mono text-xs text-neutral-500 uppercase tracking-wider mb-3">
+                  Compartir
+                </h3>
+                <ShareButton
+                  url={productUrl}
+                  title={product.title}
+                  description={product.description}
+                  price={product.price}
+                  variant="full"
+                />
+              </div>
+            </div>
 
           </div>
         </div>
