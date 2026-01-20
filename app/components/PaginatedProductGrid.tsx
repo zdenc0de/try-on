@@ -69,6 +69,8 @@ export default function PaginatedProductGrid({
         <div className="flex items-center justify-center gap-2 mt-10">
           {/* Botón Anterior */}
           <button
+            type="button"
+            aria-label="Previous page"
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
             className="p-2 border border-neutral-800 hover:border-orange-600 disabled:opacity-30 disabled:hover:border-neutral-800 transition-colors"
@@ -80,6 +82,7 @@ export default function PaginatedProductGrid({
           <div className="flex items-center gap-1">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
+                type="button"
                 key={page}
                 onClick={() => goToPage(page)}
                 className={`w-10 h-10 font-mono text-sm transition-colors ${
@@ -95,6 +98,8 @@ export default function PaginatedProductGrid({
 
           {/* Botón Siguiente */}
           <button
+            type="button"
+            aria-label="Next page"
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
             className="p-2 border border-neutral-800 hover:border-orange-600 disabled:opacity-30 disabled:hover:border-neutral-800 transition-colors"

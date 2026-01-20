@@ -9,6 +9,28 @@ export interface FavoriteResult {
   error?: string;
 }
 
+interface Profile {
+  instagram_handle: string;
+  full_name: string;
+}
+
+export interface ProductWithProfile {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image_url: string;
+  tags: string[];
+  created_at: string;
+  profiles: Profile | Profile[] | null;
+}
+
+export interface GetUserFavoritesResult {
+  success: boolean;
+  products: ProductWithProfile[];
+  error?: string;
+}
+
 /**
  * Toggle favorito: si existe lo elimina, si no existe lo agrega
  */
@@ -102,7 +124,7 @@ export async function getUserFavoriteIds(): Promise<string[]> {
 /**
  * Obtener productos favoritos del usuario con detalles completos
  */
-export async function getUserFavorites() {
+export async function getUserFavorites(): Promise<GetUserFavoritesResult> {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -138,10 +160,17 @@ export async function getUserFavorites() {
     return { success: false, products: [], error: 'Error al cargar favoritos' };
   }
 
-  // Extraer productos del resultado
-  const products = data
-    .map(f => f.product)
-    .filter(p => p !== null);
+  // Extraer productos del resultado (product puede ser objeto o array según Supabase)
+  const products: ProductWithProfile[] = data
+    .map(f => {
+      const product = f.product;
+      // Si es array, tomar el primer elemento; si es objeto, usarlo directamente
+      if (Array.isArray(product)) {
+        return product[0] as unknown as ProductWithProfile | undefined;
+      }
+      return product as unknown as ProductWithProfile | null;
+    })
+    .filter((p): p is ProductWithProfile => p !== null && p !== undefined);
 
   return { success: true, products };
 }

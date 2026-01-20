@@ -86,6 +86,7 @@ export default function EditProductModal({
             type="button"
             onClick={onClose}
             className="text-neutral-500 hover:text-white transition-colors"
+            aria-label="Cerrar"
           >
             <X size={20} />
           </button>

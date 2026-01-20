@@ -321,6 +321,8 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
     <span className="inline-flex items-center gap-1 px-2 py-1 bg-neutral-900 border border-neutral-800 text-xs uppercase tracking-wider whitespace-nowrap">
       {label}
       <button
+        type="button"
+        title="Eliminar filtro"
         onClick={onRemove}
         className="text-neutral-500 hover:text-orange-500 transition-colors ml-1"
       >

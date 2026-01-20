@@ -21,7 +21,7 @@ export default async function FavoritosPage() {
   const { products, success, error } = await getUserFavorites();
 
   // Obtener IDs para marcar como favoritos (todos lo son en esta página)
-  const favoriteIds = products?.map((p: { id: string }) => p.id) || [];
+  const favoriteIds = products?.map(p => p.id) || [];
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
